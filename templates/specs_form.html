@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Machine Specifications</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 30px;
+        }
+        h2 {
+            color: #2e6da4;
+        }
+        .form-section {
+            margin-bottom: 25px;
+        }
+        .form-section label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .hidden {
+            display: none;
+        }
+        input, select {
+            padding: 6px;
+            width: 300px;
+        }
+        .submit-btn {
+            margin-top: 30px;
+            padding: 10px 20px;
+            background-color: #2e6da4;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .submit-btn:hover {
+            background-color: #204d74;
+        }
+    </style>
+</head>
+<body>
+    <h2>Machine Specification Form</h2>
+
+    <form action="/submit_specs" method="post">
+        <input type="hidden" name="machine_name" value="{{ machine_name }}">
+        <input type="hidden" name="machine_size" value="{{ machine_size }}">
+
+        <div class="form-section">
+            <label>Quantity</label>
+            <input type="number" name="quantity" required>
+
+            <label>Rate</label>
+            <input type="number" name="rate" required>
+        </div>
+
+        <div class="form-section">
+            <label>Make</label>
+            <input type="text" name="make">
+
+            <label>Model/Year</label>
+            <input type="text" name="model_year">
+
+            <label>Type</label>
+            <input type="text" name="type">
+
+            <label>Axis Configuration</label>
+            <input type="text" name="axis_config">
+
+            <label>X-axis Travel (mm)</label>
+            <input type="text" name="x_travel">
+
+            <label>Y-axis Travel</label>
+            <input type="text" name="y_travel">
+
+            <label>Z'-axis Travel</label>
+            <input type="text" name="z_travel">
+
+            <label>A'-axis Travel</label>
+            <input type="text" name="a_travel">
+
+            <label>B'-axis Travel</label>
+            <input type="text" name="b_travel">
+
+            <label>C'-axis Travel</label>
+            <input type="text" name="c_travel">
+
+            <label>Max Part Dia</label>
+            <input type="text" name="max_part_dia">
+
+            <label>Max Part Height</label>
+            <input type="text" name="max_part_height">
+
+            <label>Spindle Taper</label>
+            <input type="text" name="spindle_taper">
+
+            <label>Spindle Power</label>
+            <input type="text" name="spindle_power">
+
+            <label>Spindle Torque</label>
+            <input type="text" name="spindle_torque">
+
+            <label>Main Spindle Max RPM</label>
+            <input type="text" name="main_spindle_rpm">
+
+            <label>Aux Spindle Max RPM</label>
+            <input type="text" name="aux_spindle_rpm">
+
+            <label>Max Table Load</label>
+            <input type="text" name="max_table_load">
+
+            <label>Thru Coolant Pressure</label>
+            <input type="text" name="coolant_pressure">
+
+            <label>Pallet Type (Thread/T Slot)</label>
+            <input type="text" name="pallet_type">
+
+            <label>Positional Tolerance Standard</label>
+            <input type="text" name="tolerance_standard">
+
+            <label>Positional Accuracy (X/Y/Z)</label>
+            <input type="text" name="accuracy_xyz">
+
+            <label>Positional Accuracy (A/B/C)</label>
+            <input type="text" name="accuracy_abc">
+
+            <label>Positional Accuracy (Table)</label>
+            <input type="text" name="accuracy_table">
+
+            <label>Angle Head</label>
+            <input type="text" name="angle_head">
+
+            <label>Controller</label>
+            <input type="text" name="controller">
+
+            <label>CAD Software</label>
+            <input type="text" name="cad_software">
+
+            <label>CAM Software</label>
+            <input type="text" name="cam_software">
+        </div>
+
+        <!-- Special Specs -->
+        <div class="form-section" id="special-specs" style="display: none;">
+            <h3>Special Specifications</h3>
+
+            <label>Wire Diameter</label>
+            <input type="text" name="wire_diameter">
+
+            <label>Taper Degree</label>
+            <input type="text" name="taper_degree">
+
+            <label>Max Cutting Thickness</label>
+            <input type="text" name="max_cut_thickness">
+
+            <label>Surface Finish (Ra)</label>
+            <input type="text" name="surface_finish">
+
+            <label>Electrode Diameter</label>
+            <input type="text" name="electrode_diameter">
+
+            <label>Spindle Stroke</label>
+            <input type="text" name="spindle_stroke">
+
+            <label>Table Size</label>
+            <input type="text" name="table_size">
+
+            <label>Sink Size</label>
+            <input type="text" name="sink_size">
+        </div>
+
+        <button type="submit" class="submit-btn">Submit Specification</button>
+    </form>
+
+    <script>
+        const specialMachines = [
+            "Spark Erosion Drill",
+            "Spark Electrical Discharge Machining",
+            "Wire Electrical Discharge Machining"
+        ];
+        const currentMachine = "{{ machine_name }}";
+        if (specialMachines.includes(currentMachine)) {
+            document.getElementById('special-specs').style.display = "block";
+        }
+    </script>
+</body>
+</html>
+
+
+
