@@ -1,11 +1,18 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, session
 import pandas as pd
 import os
 
 app = Flask(__name__)
-app.secret_key = 'macreq123'  # Required to use session
+app.secret_key = 'macreq_secret_key'
 
-EXCEL_PATH = 'data/responses.xlsx'
+# Create data folder if not exists
+if not os.path.exists('data'):
+    os.makedirs('data')
+
+excel_file = 'data/responses.xlsx'
+
+# Special spec machines (last 3)
+SPECIAL = ['Spark Erosion Drill', 'Spark Electrical Discharge Machining', 'Wire Electrical Discharge Machining']
 
 @app.route('/')
 def index():
@@ -13,49 +20,55 @@ def index():
 
 @app.route('/specs_form', methods=['POST'])
 def specs_form():
-    # Store customer info once in session
-    session['customer'] = {
+    session['cust'] = {
         'company_name': request.form['company_name'],
         'vendor_name': request.form['vendor_name'],
-        'address': request.form['address']
+        'address': request.form['address'],
+        'rate': request.form['rate']
     }
-    machine_name = request.form['machine']
-    machine_size = request.form['size']
-    return render_template('specs_form.html', machine=machine_name, size=machine_size)
+    session['machine'] = request.form['machine']
+    session['size'] = request.form['size']
+    return render_template('specs_form.html',
+                           machine=session['machine'],
+                           size=session['size'],
+                           special=session['machine'] in SPECIAL)
 
 @app.route('/submit_specs', methods=['POST'])
 def submit_specs():
-    machine = request.form['machine']
-    size = request.form['size']
-    specs = dict(request.form)
-    specs.pop('machine')
-    specs.pop('size')
+    cust = session.get('cust', {})
+    machine = session.get('machine', '')
+    size = session.get('size', '')
 
-    # Combine customer + machine + specs
-    final_data = {
-        'Company Name': session['customer']['company_name'],
-        'Vendor Name': session['customer']['vendor_name'],
-        'Address': session['customer']['address'],
+    specs = request.form.to_dict()
+    row_data = {
+        'Company Name': cust.get('company_name', ''),
+        'Vendor Name': cust.get('vendor_name', ''),
+        'Address': cust.get('address', ''),
+        'Rate per Hour': cust.get('rate', ''),
         'Machine': machine,
         'Size': size
     }
-    final_data.update(specs)
+    row_data.update(specs)
 
     # Save to Excel
-    df_new = pd.DataFrame([final_data])
-
-    if os.path.exists(EXCEL_PATH):
-        df_existing = pd.read_excel(EXCEL_PATH)
-        df_combined = pd.concat([df_existing, df_new], ignore_index=True)
+    if os.path.exists(excel_file):
+        df = pd.read_excel(excel_file)
+        df = pd.concat([df, pd.DataFrame([row_data])], ignore_index=True)
     else:
-        df_combined = df_new
+        df = pd.DataFrame([row_data])
 
-    df_combined.to_excel(EXCEL_PATH, index=False)
+    df.to_excel(excel_file, index=False)
 
-    return redirect(url_for('index'))  # Return to index to submit next machine
+    return redirect('/success')
+
+@app.route('/success')
+def success():
+    return "✅ Your machine specifications have been submitted successfully!"
 
 if __name__ == '__main__':
+    # For Render: Bind to 0.0.0.0
     app.run(host='0.0.0.0', port=5000)
+
 
 
 
