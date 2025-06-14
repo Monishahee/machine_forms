@@ -11,42 +11,45 @@ if not os.path.exists('data'):
 
 excel_file = 'data/responses.xlsx'
 
-# Special spec machines (last 3)
+# Special spec machines
 SPECIAL = ['Spark Erosion Drill', 'Spark Electrical Discharge Machining', 'Wire Electrical Discharge Machining']
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
-@app.route('/specs_form', methods=['POST'])
-def specs_form():
-    session['cust'] = {
-        'company_name': request.form['company_name'],
-        'vendor_name': request.form['vendor_name'],
-        'address': request.form['address'],
-        'rate': request.form['rate']
+@app.route('/set_customer', methods=['POST'])
+def set_customer():
+    session['customer'] = {
+        'company': request.form['company'],
+        'vendor': request.form['vendor'],
+        'address': request.form['address']
     }
-    session['machine'] = request.form['machine']
-    session['size'] = request.form['size']
-    return render_template('specs_form.html',
-                           machine=session['machine'],
-                           size=session['size'],
-                           special=session['machine'] in SPECIAL)
+    return redirect('/specs_form')
+
+@app.route('/specs_form')
+def specs_form():
+    if 'customer' not in session:
+        return redirect('/')
+    return render_template('specs_form.html', machine="", size="", special=False)
 
 @app.route('/submit_specs', methods=['POST'])
 def submit_specs():
-    cust = session.get('cust', {})
-    machine = session.get('machine', '')
-    size = session.get('size', '')
+    cust = session.get('customer', {})
+    machine = request.form.get('machine', '')
+    size = request.form.get('size', '')
+    rate = request.form.get('rate', '')
 
     specs = request.form.to_dict()
+    specs.pop('rate', None)  # remove rate from specs, it's added separately
+
     row_data = {
-        'Company Name': cust.get('company_name', ''),
-        'Vendor Name': cust.get('vendor_name', ''),
+        'Company Name': cust.get('company', ''),
+        'Vendor Name': cust.get('vendor', ''),
         'Address': cust.get('address', ''),
-        'Rate per Hour': cust.get('rate', ''),
         'Machine': machine,
-        'Size': size
+        'Size': size,
+        'Rate per Hour': rate
     }
     row_data.update(specs)
 
@@ -59,15 +62,16 @@ def submit_specs():
 
     df.to_excel(excel_file, index=False)
 
-    return redirect('/success')
+    return redirect('/specs_form')
 
 @app.route('/success')
 def success():
-    return "✅ Your machine specifications have been submitted successfully!"
+    session.clear()
+    return "✅ All machine entries saved successfully. Thank you!"
 
 if __name__ == '__main__':
-    # For Render: Bind to 0.0.0.0
-    app.run(host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000)
+
 
 
 

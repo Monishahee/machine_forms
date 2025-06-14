@@ -1,11 +1,40 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Specifications</title>
+    <title>Specifications Entry</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+        label {
+            display: block;
+            margin-top: 12px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 300px;
+            padding: 6px;
+            margin-top: 4px;
+        }
+        .required::after {
+            content: " *";
+            color: red;
+        }
+        input[type="submit"] {
+            margin-top: 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            width: 180px;
+        }
+    </style>
 </head>
 <body>
-    <h2>Specifications</h2>
+    <h2>Enter Specifications for {{ machine }} - {{ size }}</h2>
+
     <form method="POST" action="/submit_specs">
 
         <label class="required">Make</label>
@@ -89,11 +118,9 @@
         <label>CAM Software</label>
         <input type="text" name="cam">
 
-        <label class="required">Rate per Hour (₹)</label>
-        <input type="text" name="rate" required>
-
         {% if special %}
-        <h3>Special EDM Specs</h3>
+        <h3>🛠️ EDM Special Specifications</h3>
+
         <label>Wire Diameter</label>
         <input type="text" name="wire_dia">
 
@@ -123,6 +150,7 @@
     </form>
 </body>
 </html>
+
 
 
 
