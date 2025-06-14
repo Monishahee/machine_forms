@@ -1,93 +1,58 @@
-from flask import Flask, render_template, request, redirect, session
-import os
+from flask import Flask, render_template, request, redirect, url_for, session
 import pandas as pd
-from datetime import datetime
+import os
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'
+app.secret_key = 'macreq123'  # Required to use session
 
-# Paths
-DATA_FOLDER = 'data'
-EXCEL_PATH = os.path.join(DATA_FOLDER, 'responses.xlsx')
-os.makedirs(DATA_FOLDER, exist_ok=True)
-
-# Machine & size options
-MACHINES = [
-    'Vertical Turning Turret', 'Vertical Turning Ram', 'Turning Lathe', 'Turning CNC',
-    'Conventional Milling', '3 Axis Vertical Machining Center', '3 Axis Horizontal Machining Center',
-    '4 Axis Vertical Machining Center', '4 Axis Horizontal Machining Center', '4 Axis Turn Mill',
-    '5 axis Milling', '5 Axis Mill Turn', '5 Axis Turn Mill',
-    'Surface Grinding', 'Cylindrical Grinding',
-    'Spark Erosion Drill', 'Spark Electrical Discharge Machining', 'Wire Electrical Discharge Machining'
-]
-SIZES = ['S1[Part Size (<=200)]', 'S2[Part Size (<=500)]', 'M1[Part Size (<=800)]', 'M2[Part Size (<=1000)]', 'L1[Part Size (<=1200)]', 'L2[Part Size (<=1500)]' , 'SP[Part Size (>1500)]' ]
-
-def is_special(machine):
-    return machine in [
-        'Spark Erosion Drill',
-        'Spark Electrical Discharge Machining',
-        'Wire Electrical Discharge Machining'
-    ]
+EXCEL_PATH = 'data/responses.xlsx'
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
-@app.route('/submit_customer', methods=['POST'])
-def submit_customer():
-    session['customer'] = {
-        'Company Name': request.form['company'],
-        'Vendor Name': request.form['vendor'],
-        'Address': request.form['address']
-    }
-    session['entries'] = []
-    return redirect('/machine_form')
-
-@app.route('/machine_form')
-def machine_form():
-    return render_template('machine_form.html', machines=MACHINES, sizes=SIZES)
-
-@app.route('/submit_machine', methods=['POST'])
-def submit_machine():
-    session['current'] = {
-        'Machine': request.form['machine'],
-        'Size': request.form['size'],
-        'Rate': request.form['rate'],
-        'Quantity': request.form['quantity']
-    }
-    return redirect('/specs_form')
-
-@app.route('/specs_form')
+@app.route('/specs_form', methods=['POST'])
 def specs_form():
-    machine = session.get('current', {}).get('Machine', '')
-    special = is_special(machine)
-    return render_template('specs_form.html', special=special)
+    # Store customer info once in session
+    session['customer'] = {
+        'company_name': request.form['company_name'],
+        'vendor_name': request.form['vendor_name'],
+        'address': request.form['address']
+    }
+    machine_name = request.form['machine']
+    machine_size = request.form['size']
+    return render_template('specs_form.html', machine=machine_name, size=machine_size)
 
-@app.route('/submit_specifications', methods=['POST'])
-def submit_specifications():
-    spec_data = request.form.to_dict()
-    entry = {}
-    entry.update(session.get('customer', {}))
-    entry.update(session.get('current', {}))
-    entry.update(spec_data)
-    entry['Timestamp'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+@app.route('/submit_specs', methods=['POST'])
+def submit_specs():
+    machine = request.form['machine']
+    size = request.form['size']
+    specs = dict(request.form)
+    specs.pop('machine')
+    specs.pop('size')
 
-    entries = session.get('entries', [])
-    entries.append(entry)
-    session['entries'] = entries
+    # Combine customer + machine + specs
+    final_data = {
+        'Company Name': session['customer']['company_name'],
+        'Vendor Name': session['customer']['vendor_name'],
+        'Address': session['customer']['address'],
+        'Machine': machine,
+        'Size': size
+    }
+    final_data.update(specs)
 
-    return render_template('entry_submitted.html')
+    # Save to Excel
+    df_new = pd.DataFrame([final_data])
 
-@app.route('/final_submit')
-def final_submit():
-    entries = session.get('entries', [])
-    df = pd.DataFrame(entries)
     if os.path.exists(EXCEL_PATH):
-        existing = pd.read_excel(EXCEL_PATH)
-        df = pd.concat([existing, df], ignore_index=True)
-    df.to_excel(EXCEL_PATH, index=False)
-    session.clear()
-    return "✅ All entries successfully submitted and saved to Excel."
+        df_existing = pd.read_excel(EXCEL_PATH)
+        df_combined = pd.concat([df_existing, df_new], ignore_index=True)
+    else:
+        df_combined = df_new
+
+    df_combined.to_excel(EXCEL_PATH, index=False)
+
+    return redirect(url_for('index'))  # Return to index to submit next machine
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
