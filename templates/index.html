@@ -1,54 +1,31 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Machine Form</title>
+    <title>Customer Entry</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h2>Customer & Machine Selection</h2>
-    <form action="/add_machine" method="post">
-        {% if not session.get('customer_details_filled') %}
-        <div class="form-section">
-            <label>Company Name</label>
-            <input type="text" name="company" required>
+    <h2>Customer Details</h2>
+    <form action="/submit_customer" method="POST">
+        <label class="required">Company Name</label>
+        <input type="text" name="company" required>
 
-            <label>Vendor Name</label>
-            <input type="text" name="vendor" required>
+        <label class="required">Vendor Name</label>
+        <input type="text" name="vendor" required>
 
-            <label>Address</label>
-            <input type="text" name="address" required>
-        </div>
-        {% endif %}
+        <label class="required">Address</label>
+        <input type="text" name="address" required>
 
-        <div class="form-section">
-            <label>Machine Name</label>
-            <select name="machine_name" required>
-                {% for machine in machine_list %}
-                <option value="{{ machine }}">{{ machine }}</option>
-                {% endfor %}
-            </select>
-
-            <label>Machine Size</label>
-            <select name="machine_size" required>
-                <option value="S1">S1</option>
-                <option value="S2">S2</option>
-                <option value="M1">M1</option>
-                <option value="M2">M2</option>
-                <option value="L1">L1</option>
-                <option value="L2">L2</option>
-            </select>
-        </div>
-
-        <button type="submit">Next: Fill Specifications</button>
+        <input type="submit" value="Next">
     </form>
-
-    {% if session.get('entries') %}
-    <form action="/submit_all" method="post">
-        <button class="submit-btn" type="submit">✅ Final Submit & Save to Excel</button>
-    </form>
-    {% endif %}
 </body>
 </html>
+
+
+
+
+
+
 
 
 

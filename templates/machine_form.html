@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Select Machine</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h2>Select Machine</h2>
+    <form action="/submit_machine" method="POST">
+        <label class="required">Machine</label>
+        <select name="machine" required>
+            {% for machine in machines %}
+                <option value="{{ machine }}">{{ machine }}</option>
+            {% endfor %}
+        </select>
+
+        <label class="required">Size</label>
+        <select name="size" required>
+            {% for size in sizes %}
+                <option value="{{ size }}">{{ size }}</option>
+            {% endfor %}
+        </select>
+
+        <label class="required">Rate per hour</label>
+        <input type="text" name="rate" required>
+
+
+        <input type="submit" value="Next">
+    </form>
+</body>
+</html>
+
+
