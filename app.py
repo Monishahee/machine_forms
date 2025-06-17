@@ -1,22 +1,26 @@
-
 from flask import Flask, render_template, request, redirect, url_for, session
-import os
 from werkzeug.utils import secure_filename
-import firebase_admin
-from firebase_admin import credentials, firestore
+from firebase_admin import credentials, firestore, initialize_app
+from openpyxl import Workbook, load_workbook
+import os
+import json
+import datetime
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
 
-# Upload folder
+# Folder setup
 UPLOAD_FOLDER = 'uploads'
+EXCEL_PATH = 'data/responses.xlsx'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs('data', exist_ok=True)
 
 # Firebase Initialization
-cred = credentials.Certificate('firebase_key.json')  # Place your Firebase private key here
-firebase_admin.initialize_app(cred)
+cred = credentials.Certificate('firebase_key.json')  # Replace with your path
+initialize_app(cred)
 db = firestore.client()
 
+# Routes
 @app.route('/')
 def vendor_form():
     return render_template('vendor_form.html')
@@ -160,11 +164,10 @@ def final_submit():
         return "No machines added", 400
 
     try:
-        # Create new vendor document
+        # FIRESTORE STORE
         vendor_ref = db.collection('vendors').document()
         vendor_ref.set({'vendor_data': vendor_data})
 
-        # Store each machine entry under subcollection
         for machine in machine_entries:
             machine_data = {
                 key: machine[key]
@@ -175,20 +178,45 @@ def final_submit():
                 key: val for key, val in machine.items()
                 if key not in machine_data
             }
-            machine_ref = vendor_ref.collection('machines').document()
-            machine_ref.set({
+            vendor_ref.collection('machines').document().set({
                 'machine_data': machine_data,
                 'specs': specs_data
             })
 
+        # EXCEL STORE
+        if os.path.exists(EXCEL_PATH):
+            wb = load_workbook(EXCEL_PATH)
+            ws = wb.active
+        else:
+            wb = Workbook()
+            ws = wb.active
+            headers = ['Timestamp'] + list(vendor_data.keys()) + ['Machine', 'Size', 'Hour Rate']
+            sample_keys = list(machine_entries[0].keys())
+            for k in ['Machine', 'Size', 'Hour Rate']:
+                if k in sample_keys:
+                    sample_keys.remove(k)
+            headers += sample_keys
+            ws.append(headers)
+
+        for machine in machine_entries:
+            row = [datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')]
+            row += [vendor_data.get(k, '') for k in vendor_data]
+            row += [machine.get('Machine'), machine.get('Size'), machine.get('Hour Rate')]
+            for k in ws[1][len(row):]:  # Ensure columns match header
+                row.append(machine.get(k.value, ''))
+            ws.append(row)
+
+        wb.save(EXCEL_PATH)
+
         session.clear()
-        return "✅ Submission successful! Data saved to Firestore."
+        return "✅ Submission successful! Saved to Firestore and Excel."
 
     except Exception as e:
-        return f"❌ Firestore Error: {str(e)}", 500
+        return f"❌ Error: {str(e)}", 500
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
+
 
 
