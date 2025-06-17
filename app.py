@@ -1,24 +1,32 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from werkzeug.utils import secure_filename
-import os
 from openpyxl import Workbook, load_workbook
+from openpyxl.utils.exceptions import InvalidFileException
+import os
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
 
-# Paths
-UPLOAD_FOLDER = 'uploads'
-DATA_FOLDER = 'data'
-EXCEL_FILE = os.path.join(DATA_FOLDER, 'responses.xlsx')
+# File paths
+EXCEL_FILE = 'responses.xlsx'
+UPLOAD_FOLDER_VENDOR = 'uploads/vendor_images'
+UPLOAD_FOLDER_MACHINE = 'uploads/machine_images'
+os.makedirs(UPLOAD_FOLDER_VENDOR, exist_ok=True)
+os.makedirs(UPLOAD_FOLDER_MACHINE, exist_ok=True)
 
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(DATA_FOLDER, exist_ok=True)
+# Default machines and sizes
+MACHINES = [
+    'Vertical Turning Turret', 'Vertical Turning Ram', 'Turning Lathe', 'Turning CNC',
+    'Conventional Milling', '3 Axis Vertical Machining Center', '3 Axis Horizontal Machining Center',
+    '4 Axis Vertical Machining Center', '4 Axis Horizontal Machining Center', '4 Axis Turn Mill',
+    '5 axis Milling', '5 Axis Mill Turn', '5 Axis Turn Mill', 'Surface Grinding',
+    'Cylindrical Grinding', 'Spark Erosion Drill', 'Spark Electrical Discharge Machining',
+    'Wire Electrical Discharge Machining'
+]
+SIZES = ['S1', 'S2', 'M1', 'M2', 'L1', 'L2']
 
-# Initialize Excel file if not exists
-if not os.path.exists(EXCEL_FILE):
-    wb = Workbook()
-    ws = wb.active
-    ws.title = 'Responses'
+# Excel Setup Function
+def setup_excel():
     headers = [
         'Company Name', 'Vendor Name', 'Address', 'GSTIN', 'Contact Name', 'Phone', 'Email', 'Website',
         'Payment Terms', 'Basis of Approval', 'Associated From', 'Validity of Approval', 'Approved By',
@@ -28,9 +36,23 @@ if not os.path.exists(EXCEL_FILE):
         'A-axis Travel', 'B-axis Travel', 'C-axis Travel', 'Max Part Size', 'Max Part Height', 'Spindle Taper',
         'Spindle Power', 'Spindle Torque', 'Main Spindle Max RPM', 'Aux Spindle Max RPM', 'Max Table Load',
         'Thru Coolant Pressure', 'Pallet type', 'Tolerance Std', 'Accuracy X/Y/Z', 'Accuracy A/B/C',
-        'Accuracy Table', 'Angle Head', 'Controller', 'CAD', 'CAM', 'Vendor Image', 'Machine Image'
+        'Accuracy Table', 'Angle Head', 'Controller', 'CAD', 'CAM',
+        'Wire Diameter', 'Taper Degree', 'Max Cutting Thickness', 'Surface Finish (Ra)',
+        'Electrode Diameter', 'Spindle Stroke', 'Table Size', 'Sink Size',
+        'Vendor Image', 'Machine Image'
     ]
-    ws.append(headers)
+    try:
+        wb = load_workbook(EXCEL_FILE)
+        if 'Responses' in wb.sheetnames:
+            ws = wb['Responses']
+        else:
+            ws = wb.create_sheet('Responses')
+            ws.append(headers)
+    except (FileNotFoundError, InvalidFileException):
+        wb = Workbook()
+        ws = wb.active
+        ws.title = 'Responses'
+        ws.append(headers)
     wb.save(EXCEL_FILE)
 
 @app.route('/')
@@ -59,32 +81,23 @@ def submit_vendor():
         'Enquired Part': request.form.get('enquired_part'),
         'Visited Date': request.form.get('visited_date'),
         'NDA Signed': request.form.get('nda_signed'),
-        'Detailed Evaluation': request.form.get('detailed_evaluation'),
+        'Detailed Evaluation': request.form.get('detailed_evaluation')
     }
 
     image = request.files.get('company_board')
     if image and image.filename:
         filename = secure_filename(image.filename)
-        image_path = os.path.join(UPLOAD_FOLDER, filename)
+        image_path = os.path.join(UPLOAD_FOLDER_VENDOR, filename)
         image.save(image_path)
-        session['vendor_data']['Company Board Image'] = image_path
+        session['vendor_data']['Vendor Image'] = image_path
     else:
-        session['vendor_data']['Company Board Image'] = ''
+        session['vendor_data']['Vendor Image'] = ''
 
     return redirect(url_for('machine_entry'))
 
 @app.route('/machine_entry')
 def machine_entry():
-    machines = [
-        'Vertical Turning Turret', 'Vertical Turning Ram', 'Turning Lathe', 'Turning CNC',
-        'Conventional Milling', '3 Axis Vertical Machining Center', '3 Axis Horizontal Machining Center',
-        '4 Axis Vertical Machining Center', '4 Axis Horizontal Machining Center', '4 Axis Turn Mill',
-        '5 axis Milling', '5 Axis Mill Turn', '5 Axis Turn Mill', 'Surface Grinding',
-        'Cylindrical Grinding', 'Spark Erosion Drill', 'Spark Electrical Discharge Machining',
-        'Wire Electrical Discharge Machining'
-    ]
-    sizes = ['S1', 'S2', 'M1', 'M2', 'L1', 'L2']
-    return render_template('machine_entry.html', machines=machines, sizes=sizes)
+    return render_template('machine_entry.html', machines=MACHINES, sizes=SIZES)
 
 @app.route('/submit_machine', methods=['POST'])
 def submit_machine():
@@ -96,15 +109,10 @@ def submit_machine():
 
     image = request.files.get('machine_image')
     if image and image.filename:
-        folder_name = f"{session['machine_data']['Machine']}_{session['machine_data']['Size']}".replace(' ', '_')
-        folder_path = os.path.join(UPLOAD_FOLDER, folder_name)
-        os.makedirs(folder_path, exist_ok=True)
-
         filename = secure_filename(image.filename)
-        image_path = os.path.join(folder_path, filename)
+        image_path = os.path.join(UPLOAD_FOLDER_MACHINE, filename)
         image.save(image_path)
         session['machine_data']['Machine Image'] = image_path
-        session['vendor_data']['Company Board Image'] = session['vendor_data'].get('Company Board Image', '')
     else:
         session['machine_data']['Machine Image'] = ''
 
@@ -147,25 +155,35 @@ def submit_specs():
         'CAM': request.form.get('cam'),
     }
 
-    # Combine all data
-    combined = {
-        **session['vendor_data'],
-        **session['machine_data'],
-        **specs
-    }
+    if session['machine_data']['Machine'] in [
+        'Spark Erosion Drill', 'Spark Electrical Discharge Machining', 'Wire Electrical Discharge Machining'
+    ]:
+        specs.update({
+            'Wire Diameter': request.form.get('wire_dia'),
+            'Taper Degree': request.form.get('taper_deg'),
+            'Max Cutting Thickness': request.form.get('cutting_thickness'),
+            'Surface Finish (Ra)': request.form.get('surface_finish'),
+            'Electrode Diameter': request.form.get('electrode_dia'),
+            'Spindle Stroke': request.form.get('spindle_stroke'),
+            'Table Size': request.form.get('table_size'),
+            'Sink Size': request.form.get('sink_size')
+        })
 
-    # Save to Excel
+    combined = {**session['vendor_data'], **session['machine_data'], **specs}
+
+    setup_excel()  # ensure Excel file is ready
     wb = load_workbook(EXCEL_FILE)
     ws = wb['Responses']
-    row = [combined.get(col, '') for col in ws[1]]
+
+    row = [combined.get(col.value, '') for col in ws[1]]
     ws.append(row)
     wb.save(EXCEL_FILE)
 
-    return "✅ Submission complete. Data saved to Excel and images stored."
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+    session.clear()
+    return "✅ Submission complete. Data saved to Excel and images saved."
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
 
 
 
