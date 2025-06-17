@@ -10,7 +10,7 @@
     <h2>Machine Entry Form</h2>
 
     <form method="POST" action="/submit_machine" enctype="multipart/form-data">
-        <label for="machine">Select Machine:</label>
+        <label for="machine">Select Machine<span style="color:red">*</span>:</label>
         <select name="machine" required>
             <option value="">-- Select Machine --</option>
             <option value="Vertical Turning Turret">Vertical Turning Turret</option>
@@ -33,7 +33,7 @@
             <option value="Wire Electrical Discharge Machining">Wire Electrical Discharge Machining</option>
         </select>
 
-        <label for="size">Select Size:</label>
+        <label for="size">Select Size<span style="color:red">*</span>:</label>
         <select name="size" required>
             <option value="">-- Select Size --</option>
             <option value="S1 Part Size (<=200)">S1 Part Size (<=200)</option>
@@ -45,10 +45,10 @@
             <option value="SP Part Size (>1500)">SP Part Size (>1500)</option>
         </select>
 
-        <label for="hour_rate">Hour Rate (₹/hr):</label>
+        <label for="hour_rate">Hour Rate (₹/hr)<span style="color:red">*</span>:</label>
         <input type="number" name="hour_rate" min="0" step="0.01" required>
 
-        <label for="machine_images">Upload Machine Images (multiple allowed):</label>
+        <label for="machine_images">Upload Machine Images (multiple allowed)<span style="color:red">*</span>:</label>
         <input type="file" name="machine_images" accept="image/*" multiple required>
 
         <br>
