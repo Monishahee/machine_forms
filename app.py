@@ -6,28 +6,29 @@ from openpyxl import Workbook, load_workbook
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
 
-# Create folders
+# Paths
 UPLOAD_FOLDER = 'uploads'
-EXCEL_FILE = 'data/responses.xlsx'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs('data', exist_ok=True)
+DATA_FOLDER = 'data'
+EXCEL_FILE = os.path.join(DATA_FOLDER, 'responses.xlsx')
 
-# Create Excel file if not exists
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(DATA_FOLDER, exist_ok=True)
+
+# Initialize Excel file if not exists
 if not os.path.exists(EXCEL_FILE):
     wb = Workbook()
     ws = wb.active
-    ws.title = "Responses"
+    ws.title = 'Responses'
     headers = [
-        "Company Name", "Vendor Name", "Address", "GSTIN", "Contact Name", "Phone", "Email", "Website",
-        "Payment Terms", "Basis of Approval", "Associated From", "Validity of Approval", "Approved By",
-        "Identification", "Feedback", "Remarks", "Enquired Part", "Visited Date", "NDA Signed", "Detailed Evaluation",
-        "Company Board Image", "Machine", "Size", "Hour Rate", "Machine Image", "Make", "Model/Year", "Type",
-        "Axis Config", "X Travel", "Y Travel", "Z Travel", "A Travel", "B Travel", "C Travel", "Max Part Size",
-        "Max Part Height", "Spindle Taper", "Spindle Power", "Spindle Torque", "Main Spindle RPM", "Aux Spindle RPM",
-        "Max Table Load", "Coolant Pressure", "Pallet Type", "Tolerance Std", "Accuracy XYZ", "Accuracy ABC",
-        "Accuracy Table", "Angle Head", "Controller", "CAD", "CAM",
-        "Wire Diameter", "Taper Deg", "Cutting Thickness", "Surface Finish", "Electrode Dia", "Spindle Stroke",
-        "Table Size", "Sink Size"
+        'Company Name', 'Vendor Name', 'Address', 'GSTIN', 'Contact Name', 'Phone', 'Email', 'Website',
+        'Payment Terms', 'Basis of Approval', 'Associated From', 'Validity of Approval', 'Approved By',
+        'Identification', 'Feedback', 'Remarks', 'Enquired Part', 'Visited Date', 'NDA Signed', 'Detailed Evaluation',
+        'Machine', 'Size', 'Hour Rate',
+        'Make', 'Model/Year', 'Type', 'Axis Configuration', 'X-axis Travel', 'Y-axis Travel', 'Z-axis Travel',
+        'A-axis Travel', 'B-axis Travel', 'C-axis Travel', 'Max Part Size', 'Max Part Height', 'Spindle Taper',
+        'Spindle Power', 'Spindle Torque', 'Main Spindle Max RPM', 'Aux Spindle Max RPM', 'Max Table Load',
+        'Thru Coolant Pressure', 'Pallet type', 'Tolerance Std', 'Accuracy X/Y/Z', 'Accuracy A/B/C',
+        'Accuracy Table', 'Angle Head', 'Controller', 'CAD', 'CAM', 'Vendor Image', 'Machine Image'
     ]
     ws.append(headers)
     wb.save(EXCEL_FILE)
@@ -64,7 +65,7 @@ def submit_vendor():
     image = request.files.get('company_board')
     if image and image.filename:
         filename = secure_filename(image.filename)
-        image_path = os.path.join(UPLOAD_FOLDER, 'vendor_' + filename)
+        image_path = os.path.join(UPLOAD_FOLDER, filename)
         image.save(image_path)
         session['vendor_data']['Company Board Image'] = image_path
     else:
@@ -87,59 +88,58 @@ def machine_entry():
 
 @app.route('/submit_machine', methods=['POST'])
 def submit_machine():
-    session['selected_machine'] = request.form.get('machine')
-    session['selected_size'] = request.form.get('size')
-    session['hour_rate'] = request.form.get('hour_rate')
+    session['machine_data'] = {
+        'Machine': request.form.get('machine'),
+        'Size': request.form.get('size'),
+        'Hour Rate': request.form.get('hour_rate')
+    }
 
     image = request.files.get('machine_image')
     if image and image.filename:
+        folder_name = f"{session['machine_data']['Machine']}_{session['machine_data']['Size']}".replace(' ', '_')
+        folder_path = os.path.join(UPLOAD_FOLDER, folder_name)
+        os.makedirs(folder_path, exist_ok=True)
+
         filename = secure_filename(image.filename)
-        machine_folder = os.path.join(UPLOAD_FOLDER, session['selected_machine'].replace(' ', '_'))
-        os.makedirs(machine_folder, exist_ok=True)
-        image_path = os.path.join(machine_folder, filename)
+        image_path = os.path.join(folder_path, filename)
         image.save(image_path)
-        session['machine_image'] = image_path
+        session['machine_data']['Machine Image'] = image_path
+        session['vendor_data']['Company Board Image'] = session['vendor_data'].get('Company Board Image', '')
     else:
-        session['machine_image'] = ''
+        session['machine_data']['Machine Image'] = ''
 
     return redirect(url_for('specs_form'))
 
 @app.route('/specs_form')
 def specs_form():
-    return render_template('specs_form.html', machine=session.get('selected_machine'), size=session.get('selected_size'))
+    return render_template('specs_form.html', machine=session['machine_data']['Machine'], size=session['machine_data']['Size'])
 
 @app.route('/submit_specs', methods=['POST'])
 def submit_specs():
-    data = {**session.get('vendor_data', {})}
-
-    machine_data = {
-        'Machine': session.get('selected_machine'),
-        'Size': session.get('selected_size'),
-        'Hour Rate': session.get('hour_rate'),
-        'Machine Image': session.get('machine_image'),
+    specs = {
         'Make': request.form.get('make'),
         'Model/Year': request.form.get('model_year'),
         'Type': request.form.get('type'),
-        'Axis Config': request.form.get('axis_config'),
-        'X Travel': request.form.get('x_travel'),
-        'Y Travel': request.form.get('y_travel'),
-        'Z Travel': request.form.get('z_travel'),
-        'A Travel': request.form.get('a_travel'),
-        'B Travel': request.form.get('b_travel'),
-        'C Travel': request.form.get('c_travel'),
+        'Axis Configuration': request.form.get('axis_config'),
+        'X-axis Travel': request.form.get('x_travel'),
+        'Y-axis Travel': request.form.get('y_travel'),
+        'Z-axis Travel': request.form.get('z_travel'),
+        'A-axis Travel': request.form.get('a_travel'),
+        'B-axis Travel': request.form.get('b_travel'),
+        'C-axis Travel': request.form.get('c_travel'),
         'Max Part Size': request.form.get('max_part_size'),
         'Max Part Height': request.form.get('max_part_height'),
         'Spindle Taper': request.form.get('spindle_taper'),
         'Spindle Power': request.form.get('spindle_power'),
         'Spindle Torque': request.form.get('spindle_torque'),
-        'Main Spindle RPM': request.form.get('main_spindle_rpm'),
-        'Aux Spindle RPM': request.form.get('aux_spindle_rpm'),
+        'Main Spindle Max RPM': request.form.get('main_spindle_rpm'),
+        'Aux Spindle Max RPM': request.form.get('aux_spindle_rpm'),
         'Max Table Load': request.form.get('max_table_load'),
-        'Coolant Pressure': request.form.get('coolant_pressure'),
-        'Pallet Type': request.form.get('pallet_type'),
+        'Thru Coolant Pressure': request.form.get('coolant_pressure'),
+        'Pallet type': request.form.get('pallet_type'),
         'Tolerance Std': request.form.get('tolerance_std'),
-        'Accuracy XYZ': request.form.get('accuracy_xyz'),
-        'Accuracy ABC': request.form.get('accuracy_abc'),
+        'Accuracy X/Y/Z': request.form.get('accuracy_xyz'),
+        'Accuracy A/B/C': request.form.get('accuracy_abc'),
         'Accuracy Table': request.form.get('accuracy_table'),
         'Angle Head': request.form.get('angle_head'),
         'Controller': request.form.get('controller'),
@@ -147,36 +147,26 @@ def submit_specs():
         'CAM': request.form.get('cam'),
     }
 
-    if session.get('selected_machine') in [
-        'Spark Erosion Drill', 'Spark Electrical Discharge Machining', 'Wire Electrical Discharge Machining'
-    ]:
-        machine_data.update({
-            'Wire Diameter': request.form.get('wire_dia'),
-            'Taper Deg': request.form.get('taper_deg'),
-            'Cutting Thickness': request.form.get('cutting_thickness'),
-            'Surface Finish': request.form.get('surface_finish'),
-            'Electrode Dia': request.form.get('electrode_dia'),
-            'Spindle Stroke': request.form.get('spindle_stroke'),
-            'Table Size': request.form.get('table_size'),
-            'Sink Size': request.form.get('sink_size'),
-        })
+    # Combine all data
+    combined = {
+        **session['vendor_data'],
+        **session['machine_data'],
+        **specs
+    }
 
-    data.update(machine_data)
+    # Save to Excel
+    wb = load_workbook(EXCEL_FILE)
+    ws = wb['Responses']
+    row = [combined.get(col, '') for col in ws[1]]
+    ws.append(row)
+    wb.save(EXCEL_FILE)
 
-    try:
-        wb = load_workbook(EXCEL_FILE)
-        ws = wb.active
-        row = [data.get(h, '') for h in ws[1]]
-        ws.append(row)
-        wb.save(EXCEL_FILE)
-    except Exception as e:
-        return f"❌ Error writing to Excel: {str(e)}", 500
+    return "✅ Submission complete. Data saved to Excel and images stored."
 
-    session.clear()
-    return "✅ Submitted! All data saved to Excel + images saved."
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
 
-if __name__ == '__main__':
-    app.run(debug=True)
 
 
 
