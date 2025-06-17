@@ -1,4 +1,6 @@
-flask
+Flask
+pandas
 openpyxl
-werkzeug
+Werkzeug
+
 
