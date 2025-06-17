@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: vendor-machine-form
+    runtime: python
+    buildCommand: ""
+    startCommand: gunicorn app:app
+    envVars:
+      - key: GOOGLE_APPLICATION_CREDENTIALS
+        value: serviceAccountKey.json
+    staticPublishPath: static
