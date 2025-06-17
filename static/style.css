@@ -1,36 +1,3 @@
-/* Reset and Base Styles */
-* {
-    box-sizing: border-box;
-}
-
-body {
-    font-family: 'Segoe UI', sans-serif;
-    font-size: 16px;
-    line-height: 1.6;
-    background-color: #f2f2f2;
-    margin: 0;
-    padding: 10px;
-}
-
-/* Centered Container */
-.container {
-    max-width: 900px;
-    margin: auto;
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
-}
-
-/* Headings */
-h1, h2, h3 {
-    font-size: 20px;
-    text-align: center;
-    color: #333;
-    margin-bottom: 20px;
-}
-
-/* Labels */
 label {
     font-size: 16px;
     font-weight: 500;
@@ -39,80 +6,31 @@ label {
     color: #333;
 }
 
-/* Input Fields */
-input[type="text"],
-input[type="email"],
-input[type="number"],
-input[type="file"],
-input[type="date"],
-select,
-textarea {
-    width: 100%;
+input, select, textarea {
     padding: 14px;
     font-size: 16px;
-    border-radius: 6px;
+    width: 100%;
+    border-radius: 5px;
     border: 1px solid #ccc;
     margin-bottom: 15px;
 }
 
-/* Buttons */
-button,
-input[type="submit"] {
-    width: 100%;
-    padding: 14px;
-    font-size: 17px;
-    background-color: #007BFF;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    margin-top: 10px;
-}
-
-button:hover,
-input[type="submit"]:hover {
-    background-color: #0056b3;
-}
-
-/* Responsive Grid Layout */
-.form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
+h2 {
+    font-size: 22px;
+    color: #0056b3;
+    margin-bottom: 15px;
+    text-align: center;
 }
 
 @media (max-width: 768px) {
-    .form-grid {
-        grid-template-columns: 1fr;
+    h2 {
+        font-size: 20px;
     }
 
-    h1, h2, h3 {
-        font-size: 18px;
-    }
-
-    label {
-        font-size: 15px;
-    }
-
-    input, select, textarea {
-        font-size: 15px;
-        padding: 13px;
-    }
-
-    button {
+    label, input, select, textarea {
         font-size: 16px;
     }
 }
 
-/* Section Titles */
-.section-title {
-    font-size: 18px;
-    font-weight: bold;
-    margin-top: 30px;
-    color: #0056b3;
-    border-bottom: 2px solid #0056b3;
-    padding-bottom: 5px;
-    margin-bottom: 15px;
-}
 
 
