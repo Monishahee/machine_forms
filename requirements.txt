@@ -1,5 +1,13 @@
+<<<<<<< HEAD
 Flask==2.3.3
 pandas
 gunicorn
 firebase-admin
 openpyxl
+=======
+Flask==2.3.3
+pandas
+gunicorn
+firebase-admin
+openpyxl
+>>>>>>> 2cd872f0641a0ef253698706de46b375c0209e9d
