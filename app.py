@@ -1,19 +1,22 @@
 from flask import Flask, render_template, request, redirect, url_for, session
-import os
 from werkzeug.utils import secure_filename
+import os
 import pandas as pd
+from datetime import datetime
 
 app = Flask(__name__)
-app.secret_key = 'secretkey'
+app.secret_key = 'secret_key'
 
-UPLOAD_FOLDER = 'uploads'
-EXCEL_FILE = 'responses.xlsx'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+# Create required folders
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+UPLOAD_DIR = os.path.join(BASE_DIR, 'responses', 'uploads')
+EXCEL_PATH = os.path.join(BASE_DIR, 'responses', 'responses.xlsx')
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-# Initialize Excel if not exists
-if not os.path.exists(EXCEL_FILE):
+# Initialize Excel
+if not os.path.exists(EXCEL_PATH):
     df = pd.DataFrame()
-    df.to_excel(EXCEL_FILE, index=False)
+    df.to_excel(EXCEL_PATH, index=False)
 
 @app.route('/')
 def vendor_form():
@@ -41,36 +44,40 @@ def submit_vendor():
         'Enquired Part': request.form.get('enquired_part'),
         'Visited date': request.form.get('visited_date'),
         'NDA Signed': request.form.get('nda_signed'),
-        'Detailed Evaluation': request.form.get('detailed_evaluation'),
+        'Detailed Evaluation': request.form.get('detailed_evaluation')
     }
     session['machine_entries'] = []
     return redirect(url_for('machine_entry'))
 
 @app.route('/machine_entry')
 def machine_entry():
-    machines = [
-        'Vertical Turning Turret', 'Turning Lathe', '5 Axis Milling', 'Spark Erosion Drill'
-    ]
+    machines = ['Vertical Turning Turret', '5 Axis Milling', 'Turning Lathe', 'Spark EDM']
     sizes = ['S1', 'S2', 'M1', 'M2', 'L1', 'L2']
     return render_template('machine_entry.html', machines=machines, sizes=sizes)
 
 @app.route('/submit_machine', methods=['POST'])
 def submit_machine():
-    session['current_machine'] = {
-        'Machine': request.form.get('machine'),
-        'Size': request.form.get('size'),
-        'Hour Rate': request.form.get('hour_rate'),
-        'Image': ''
-    }
+    machine = request.form.get('machine')
+    size = request.form.get('size')
+    hour_rate = request.form.get('hour_rate')
 
-    image = request.files.get('machine_image')
-    if image and image.filename:
-        machine_folder = os.path.join(UPLOAD_FOLDER, secure_filename(session['current_machine']['Machine']))
-        os.makedirs(machine_folder, exist_ok=True)
-        filename = secure_filename(image.filename)
-        filepath = os.path.join(machine_folder, filename)
-        image.save(filepath)
-        session['current_machine']['Image'] = filepath
+    # Handle image
+    image_file = request.files.get('machine_image')
+    img_path = ''
+    if image_file and image_file.filename:
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        folder = os.path.join(UPLOAD_DIR, secure_filename(machine))
+        os.makedirs(folder, exist_ok=True)
+        filename = f"{secure_filename(machine)}_{timestamp}_{secure_filename(image_file.filename)}"
+        img_path = os.path.join(folder, filename)
+        image_file.save(img_path)
+
+    session['current_machine'] = {
+        'Machine': machine,
+        'Size': size,
+        'Hour Rate': hour_rate,
+        'Image Path': img_path
+    }
 
     return redirect(url_for('specs_form'))
 
@@ -89,8 +96,8 @@ def submit_specs():
         'Controller': request.form.get('controller')
     }
 
-    machine_full = {**session['current_machine'], **specs}
-    session['machine_entries'].append(machine_full)
+    full_entry = {**session['vendor_data'], **session['current_machine'], **specs}
+    session['machine_entries'].append(full_entry)
 
     if 'add_another' in request.form:
         return redirect(url_for('machine_entry'))
@@ -99,31 +106,25 @@ def submit_specs():
 
 @app.route('/final_submit')
 def final_submit():
-    vendor_data = session.get('vendor_data', {})
-    machines = session.get('machine_entries', [])
+    machine_entries = session.get('machine_entries', [])
+    if not machine_entries:
+        return "❌ No machines submitted.", 400
 
-    all_rows = []
-    for m in machines:
-        combined = {**vendor_data, **m}
-        all_rows.append(combined)
+    df_new = pd.DataFrame(machine_entries)
 
-    df_new = pd.DataFrame(all_rows)
-
-    if os.path.exists(EXCEL_FILE):
-        df_old = pd.read_excel(EXCEL_FILE)
-        final_df = pd.concat([df_old, df_new], ignore_index=True)
+    if os.path.exists(EXCEL_PATH):
+        df_old = pd.read_excel(EXCEL_PATH)
+        df_combined = pd.concat([df_old, df_new], ignore_index=True)
     else:
-        final_df = df_new
+        df_combined = df_new
 
-    final_df.to_excel(EXCEL_FILE, index=False)
+    df_combined.to_excel(EXCEL_PATH, index=False)
 
     session.clear()
-    return "✅ Data and images saved successfully."
+    return "✅ Submission successful. Data & images saved."
 
-# For Render/Railway
-if __name__ == "__main__":
-    import os
-    port = int(os.environ.get("PORT", 5000))
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
 
 
