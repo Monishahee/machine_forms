@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 from flask import Flask, render_template, request, redirect, url_for, session
 import os
 from werkzeug.utils import secure_filename
@@ -420,4 +420,4 @@ if __name__ == '__main__':
 
 
 
->>>>>>> 2cd872f0641a0ef253698706de46b375c0209e9d
+
