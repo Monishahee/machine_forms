@@ -1,38 +1,15 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 import os
-import pandas as pd
 from werkzeug.utils import secure_filename
+import pandas as pd
 from openpyxl import load_workbook
 
 app = Flask(__name__)
-app.secret_key = 'secret'
+app.secret_key = 'your_secret_key'
+UPLOAD_FOLDER = 'uploads'
+EXCEL_FILE = 'responses.xlsx'
 
-# Upload directories
-VENDOR_IMG_DIR = 'uploads/vendor_images'
-MACHINE_IMG_DIR = 'uploads/machine_images'
-EXCEL_PATH = 'responses.xlsx'
-
-os.makedirs(VENDOR_IMG_DIR, exist_ok=True)
-os.makedirs(MACHINE_IMG_DIR, exist_ok=True)
-
-# Ensure Excel has headers
-if not os.path.exists(EXCEL_PATH):
-    df = pd.DataFrame(columns=[
-        "Company Name", "Vendor Name", "Address", "GSTIN", "Contact Name", "Phone",
-        "Email", "Website", "Payment Terms", "Basis of Approval", "Associated From",
-        "Validity of Approval", "Approved By", "Identification", "Feedback", "Remarks",
-        "Enquired Part", "Visited Date", "NDA Signed", "Detailed Evaluation",
-        "Vendor Image Path", "Machine", "Size", "Hour Rate", "Machine Image Path",
-        "Make", "Model/Year", "Type", "Axis Configuration", "X-axis Travel", "Y-axis Travel", "Z’-axis Travel",
-        "A’-axis Travel", "B’-axis Travel", "C’-axis Travel", "Max Part Size", "Max Part Height",
-        "Spindle Taper", "Spindle Power", "Spindle Torque", "Main Spindle Max RPM",
-        "Aux Spindle Max RPM", "Max Table Load", "Thru Coolant Pressure", "Pallet type",
-        "Positional Tolerance Standard", "Positional Accuracy X/Y/Z", "Positional Accuracy A/B/C",
-        "Positional Accuracy Table", "Angle Head", "Controller", "CAD Software", "CAM Software",
-        "Wire Diameter", "Taper Degree", "Max Cutting Thickness", "Surface Finish (Ra)",
-        "Electrode Diameter", "Spindle Stroke", "Table Size", "Sink Size"
-    ])
-    df.to_excel(EXCEL_PATH, index=False, sheet_name="Responses")
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 @app.route('/')
 def vendor_form():
@@ -40,94 +17,125 @@ def vendor_form():
 
 @app.route('/submit_vendor', methods=['POST'])
 def submit_vendor():
-    session['vendor_data'] = {field: request.form.get(field.replace(' ', '_').lower()) for field in [
-        'Company Name', 'Vendor Name', 'Address', 'GSTIN', 'Contact Name', 'Phone', 'Email',
-        'Website', 'Payment Terms', 'Basis of Approval', 'Associated From', 'Validity of Approval',
-        'Approved By', 'Identification', 'Feedback', 'Remarks', 'Enquired Part',
-        'Visited Date', 'NDA Signed', 'Detailed Evaluation'
-    ]}
+    vendor_data = {
+        'Company Name': request.form.get('company_name'),
+        'Vendor Name': request.form.get('vendor_name'),
+        'Address': request.form.get('address'),
+        'GSTIN': request.form.get('gstin'),
+        'Contact Name': request.form.get('contact_name'),
+        'Phone': request.form.get('phone'),
+        'Email': request.form.get('email'),
+        'Website': request.form.get('website'),
+        'Payment Terms': request.form.get('payment_terms'),
+        'Basis of Approval': request.form.get('basis_of_approval'),
+        'Associated From': request.form.get('associated_from'),
+        'Validity of Approval': request.form.get('validity_of_approval'),
+        'Approved By': request.form.get('approved_by'),
+        'Identification': request.form.get('identification'),
+        'Feedback': request.form.get('feedback'),
+        'Remarks': request.form.get('remarks'),
+        'Enquired Part': request.form.get('enquired_part'),
+        'Visited Date': request.form.get('visited_date'),
+        'NDA Signed': request.form.get('nda_signed'),
+        'Detailed Evaluation': request.form.get('detailed_evaluation'),
+    }
 
-    # Save company board image
     image = request.files.get('company_board')
     if image and image.filename:
         filename = secure_filename(image.filename)
-        vendor_image_path = os.path.join(VENDOR_IMG_DIR, filename)
-        image.save(vendor_image_path)
-        session['vendor_data']['Vendor Image Path'] = vendor_image_path
+        image_path = os.path.join(UPLOAD_FOLDER, filename)
+        image.save(image_path)
+        vendor_data['Company Board Image'] = image_path
     else:
-        session['vendor_data']['Vendor Image Path'] = ''
+        vendor_data['Company Board Image'] = ''
+
+    session['vendor_data'] = vendor_data
+    session['machine_entries'] = []
 
     return redirect(url_for('machine_entry'))
 
 @app.route('/machine_entry')
 def machine_entry():
     machines = [
-        'Vertical Turning Turret', 'Vertical Turning Ram', 'Turning Lathe', 'Turning CNC',
-        'Conventional Milling', '3 Axis Vertical Machining Center', '3 Axis Horizontal Machining Center',
-        '4 Axis Vertical Machining Center', '4 Axis Horizontal Machining Center', '4 Axis Turn Mill',
-        '5 axis Milling', '5 Axis Mill Turn', '5 Axis Turn Mill', 'Surface Grinding',
-        'Cylindrical Grinding', 'Spark Erosion Drill', 'Spark Electrical Discharge Machining',
-        'Wire Electrical Discharge Machining'
+        'Vertical Turning Turret', 'Turning Lathe', '5 Axis Milling', 'Spark Erosion Drill'
     ]
     sizes = ['S1', 'S2', 'M1', 'M2', 'L1', 'L2']
     return render_template('machine_entry.html', machines=machines, sizes=sizes)
 
 @app.route('/submit_machine', methods=['POST'])
 def submit_machine():
-    session['machine_data'] = {
-        'Machine': request.form.get('machine'),
-        'Size': request.form.get('size'),
-        'Hour Rate': request.form.get('hour_rate')
-    }
+    session['selected_machine'] = request.form.get('machine')
+    session['selected_size'] = request.form.get('size')
+    session['hour_rate'] = request.form.get('hour_rate')
 
     image = request.files.get('machine_image')
     if image and image.filename:
+        machine_folder = os.path.join(UPLOAD_FOLDER, secure_filename(session['selected_machine']))
+        os.makedirs(machine_folder, exist_ok=True)
         filename = secure_filename(image.filename)
-        machine_image_path = os.path.join(MACHINE_IMG_DIR, filename)
-        image.save(machine_image_path)
-        session['machine_data']['Machine Image Path'] = machine_image_path
+        image_path = os.path.join(machine_folder, filename)
+        image.save(image_path)
+        session['machine_image'] = image_path
     else:
-        session['machine_data']['Machine Image Path'] = ''
+        session['machine_image'] = ''
 
     return redirect(url_for('specs_form'))
 
 @app.route('/specs_form')
 def specs_form():
-    return render_template('specs_form.html', machine=session.get('machine_data', {}).get('Machine'), size=session.get('machine_data', {}).get('Size'))
+    return render_template('specs_form.html', machine=session.get('selected_machine'), size=session.get('selected_size'))
 
 @app.route('/submit_specs', methods=['POST'])
 def submit_specs():
-    specs_fields = [
-        'Make', 'Model/Year', 'Type', 'Axis Configuration', 'X-axis Travel', 'Y-axis Travel',
-        'Z’-axis Travel', 'A’-axis Travel', 'B’-axis Travel', 'C’-axis Travel', 'Max Part Size',
-        'Max Part Height', 'Spindle Taper', 'Spindle Power', 'Spindle Torque', 'Main Spindle Max RPM',
-        'Aux Spindle Max RPM', 'Max Table Load', 'Thru Coolant Pressure', 'Pallet type',
-        'Positional Tolerance Standard', 'Positional Accuracy X/Y/Z', 'Positional Accuracy A/B/C',
-        'Positional Accuracy Table', 'Angle Head', 'Controller', 'CAD Software', 'CAM Software',
-        'Wire Diameter', 'Taper Degree', 'Max Cutting Thickness', 'Surface Finish (Ra)',
-        'Electrode Diameter', 'Spindle Stroke', 'Table Size', 'Sink Size'
-    ]
+    machine_data = {
+        'Machine': session.get('selected_machine'),
+        'Size': session.get('selected_size'),
+        'Hour Rate': session.get('hour_rate'),
+        'Machine Image': session.get('machine_image'),
+        'Make': request.form.get('make'),
+        'Model/Year': request.form.get('model_year'),
+        'Type': request.form.get('type'),
+        'Spindle Power': request.form.get('spindle_power'),
+        'Controller': request.form.get('controller')
+        # Add more fields as needed
+    }
 
-    specs_data = {field: request.form.get(field.replace(' ', '_').lower()) for field in specs_fields}
+    session['machine_entries'].append(machine_data)
+    session.modified = True
 
-    full_data = {**session.get('vendor_data', {}), **session.get('machine_data', {}), **specs_data}
+    if 'add_another' in request.form:
+        return redirect(url_for('machine_entry'))
+    else:
+        return redirect(url_for('final_submit'))
 
-    try:
-        # Append to Excel
-        existing_df = pd.read_excel(EXCEL_PATH, sheet_name="Responses")
-        updated_df = pd.concat([existing_df, pd.DataFrame([full_data])], ignore_index=True)
-        with pd.ExcelWriter(EXCEL_PATH, engine='openpyxl', mode='w') as writer:
-            updated_df.to_excel(writer, index=False, sheet_name="Responses")
+@app.route('/final_submit')
+def final_submit():
+    vendor_data = session.get('vendor_data', {})
+    machine_entries = session.get('machine_entries', [])
 
-        session.clear()
-        return "✅ Submission successful! Data saved to Excel."
+    all_data = []
 
-    except Exception as e:
-        return f"❌ Excel Save Error: {str(e)}"
+    for machine in machine_entries:
+        row = {**vendor_data, **machine}
+        all_data.append(row)
 
-if __name__ == '__main__':
+    df = pd.DataFrame(all_data)
+
+    if not os.path.exists(EXCEL_FILE):
+        df.to_excel(EXCEL_FILE, index=False)
+    else:
+        existing = pd.read_excel(EXCEL_FILE)
+        combined = pd.concat([existing, df], ignore_index=True)
+        combined.to_excel(EXCEL_FILE, index=False)
+
+    session.clear()
+    return "✅ Data and images saved to Excel and folders successfully!"
+
+if __name__ == "__main__":
+    import os
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+    app.run(host="0.0.0.0", port=port)
+
 
 
 
