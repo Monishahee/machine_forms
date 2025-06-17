@@ -1,0 +1,5 @@
+Flask==2.3.3
+pandas
+gunicorn
+firebase-admin
+openpyxl

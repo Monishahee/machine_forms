@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Vendor Information</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h2>Vendor Registration Form</h2>
+    <form method="POST" action="/submit_vendor" enctype="multipart/form-data">
+
+        <label>Company Name<span style="color:red">*</span>:</label>
+        <input type="text" name="company_name" required><br>
+
+        <label>Vendor Manager Name<span style="color:red">*</span>:</label>
+        <input type="text" name="vendor_name" required><br>
+
+        <label>Address<span style="color:red">*</span>:</label>
+        <input type="text" name="address" required><br>
+
+        <label>Email<span style="color:red">*</span>:</label>
+        <input type="email" name="email"><br>
+
+        <label>Phone Number<span style="color:red">*</span>:</label>
+        <input type="text" name="phone" required><br>
+
+        <label>GSTIN<span style="color:red">*</span>:</label>
+        <input type="text" name="gstin" required><br>
+
+        <label>Website:</label>
+        <input type="text" name="website"><br>
+
+        <label>Payment Terms:</label>
+        <input type="text" name="payment_terms"><br>
+
+        <label>Associated From:</label>
+        <input type="text" name="associated_from"><br>
+
+        <label>Validity of Approval:</label>
+        <input type="text" name="validity"><br>
+
+        <label>Approved By:</label>
+        <input type="text" name="approved_by"><br>
+
+        <label>Identification:</label>
+        <input type="text" name="identification"><br>
+
+        <label>Feedback:</label>
+        <input type="text" name="feedback"><br>
+
+        <label>Remarks:</label>
+        <input type="text" name="remarks"><br>
+
+        <label>Enquired Part:</label>
+        <input type="text" name="enquired_part"><br>
+
+        <label>Visited Date:</label>
+        <input type="date" name="visited_date"><br>
+
+        <label>NDA Signed(yes/no)<span style="color:red">*</span>:</label>
+        <input type="text" name="nda_signed" required><br>
+
+        <label>Detailed Evaluation:</label>
+        <input type="text" name="detailed_evaluation"><br>
+
+        <label>Upload Company Board Image<span style="color:red">*</span>:</label>
+        <input type="file" name="company_image" accept="image/*"><br><br>
+
+        <button type="submit">Next</button>
+    </form>
+</body>
+</html>
+
+
+
+  
