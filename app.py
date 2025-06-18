@@ -65,7 +65,7 @@ def submit_vendor():
         board_img.save(image_path)
         vendor_data['company_image'] = image_path
 
-    session['vendor_details'] = vendor_data
+    session['vendor_data'] = vendor_data
     return redirect('/machine_entry')
 
 
@@ -82,7 +82,7 @@ def machine_entry():
 
         image_paths = []
         for img in machine_imgs:
-            if img:
+            if img and img.filename != '':
                 filename = datetime.now().strftime("%Y%m%d_%H%M%S_") + img.filename
                 image_path = os.path.join(MACHINE_IMG_FOLDER, filename)
                 img.save(image_path)
@@ -170,8 +170,9 @@ def final_submit():
                 "Specs": json.dumps(m['specs'])
             }
             all_rows.append(row)
+            print("Saving to Excel:", all_rows)
 
-        # Save to Excel
+
         existing_df = pd.read_excel(EXCEL_PATH)
         new_df = pd.DataFrame(all_rows)
         final_df = pd.concat([existing_df, new_df], ignore_index=True)
