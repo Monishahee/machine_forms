@@ -5,18 +5,11 @@ import pandas as pd
 from datetime import datetime
 
 app = Flask(__name__)
-app.secret_key = 'secret_key'
+app.secret_key = 'your_secret_key'
 
-# Create required folders
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-UPLOAD_DIR = os.path.join(BASE_DIR, 'responses', 'uploads')
-EXCEL_PATH = os.path.join(BASE_DIR, 'responses', 'responses.xlsx')
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-
-# Initialize Excel
-if not os.path.exists(EXCEL_PATH):
-    df = pd.DataFrame()
-    df.to_excel(EXCEL_PATH, index=False)
+UPLOAD_FOLDER = 'uploads'
+EXCEL_FILE = 'responses.xlsx'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 @app.route('/')
 def vendor_form():
@@ -30,28 +23,45 @@ def submit_vendor():
         'Address': request.form.get('address'),
         'GSTIN': request.form.get('gstin'),
         'Contact Name': request.form.get('contact_name'),
-        'Contact No': request.form.get('contact_no'),
-        'Mail Id': request.form.get('mail_id'),
+        'Phone': request.form.get('phone'),
+        'Email': request.form.get('email'),
         'Website': request.form.get('website'),
         'Payment Terms': request.form.get('payment_terms'),
         'Basis of Approval': request.form.get('basis_of_approval'),
-        'Associated from': request.form.get('associated_from'),
+        'Associated From': request.form.get('associated_from'),
         'Validity of Approval': request.form.get('validity_of_approval'),
-        'Approved by': request.form.get('approved_by'),
+        'Approved By': request.form.get('approved_by'),
         'Identification': request.form.get('identification'),
         'Feedback': request.form.get('feedback'),
         'Remarks': request.form.get('remarks'),
         'Enquired Part': request.form.get('enquired_part'),
-        'Visited date': request.form.get('visited_date'),
+        'Visited Date': request.form.get('visited_date'),
         'NDA Signed': request.form.get('nda_signed'),
-        'Detailed Evaluation': request.form.get('detailed_evaluation')
+        'Detailed Evaluation': request.form.get('detailed_evaluation'),
     }
+
+    image = request.files.get('company_board')
+    if image and image.filename:
+        filename = secure_filename(image.filename)
+        image_path = os.path.join(UPLOAD_FOLDER, filename)
+        image.save(image_path)
+        session['vendor_data']['Company Board Image'] = image_path
+    else:
+        session['vendor_data']['Company Board Image'] = ''
+
     session['machine_entries'] = []
     return redirect(url_for('machine_entry'))
 
 @app.route('/machine_entry')
 def machine_entry():
-    machines = ['Vertical Turning Turret', '5 Axis Milling', 'Turning Lathe', 'Spark EDM']
+    machines = [
+        'Vertical Turning Turret', 'Vertical Turning Ram', 'Turning Lathe', 'Turning CNC',
+        'Conventional Milling', '3 Axis Vertical Machining Center', '3 Axis Horizontal Machining Center',
+        '4 Axis Vertical Machining Center', '4 Axis Horizontal Machining Center', '4 Axis Turn Mill',
+        '5 axis Milling', '5 Axis Mill Turn', '5 Axis Turn Mill', 'Surface Grinding',
+        'Cylindrical Grinding', 'Spark Erosion Drill', 'Spark Electrical Discharge Machining',
+        'Wire Electrical Discharge Machining'
+    ]
     sizes = ['S1', 'S2', 'M1', 'M2', 'L1', 'L2']
     return render_template('machine_entry.html', machines=machines, sizes=sizes)
 
@@ -61,29 +71,31 @@ def submit_machine():
     size = request.form.get('size')
     hour_rate = request.form.get('hour_rate')
 
-    # Handle image
-    image_file = request.files.get('machine_image')
-    img_path = ''
-    if image_file and image_file.filename:
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        folder = os.path.join(UPLOAD_DIR, secure_filename(machine))
+    image = request.files.get('machine_image')
+    image_path = ''
+    if image and image.filename:
+        folder = os.path.join(UPLOAD_FOLDER, machine.replace(" ", "_"))
         os.makedirs(folder, exist_ok=True)
-        filename = f"{secure_filename(machine)}_{timestamp}_{secure_filename(image_file.filename)}"
-        img_path = os.path.join(folder, filename)
-        image_file.save(img_path)
+        filename = secure_filename(image.filename)
+        image_path = os.path.join(folder, filename)
+        image.save(image_path)
 
     session['current_machine'] = {
         'Machine': machine,
         'Size': size,
         'Hour Rate': hour_rate,
-        'Image Path': img_path
+        'Machine Image': image_path
     }
 
     return redirect(url_for('specs_form'))
 
 @app.route('/specs_form')
 def specs_form():
-    return render_template('specs_form.html', machine=session['current_machine']['Machine'], size=session['current_machine']['Size'])
+    return render_template(
+        'specs_form.html',
+        machine=session.get('current_machine', {}).get('Machine', ''),
+        size=session.get('current_machine', {}).get('Size', '')
+    )
 
 @app.route('/submit_specs', methods=['POST'])
 def submit_specs():
@@ -92,12 +104,67 @@ def submit_specs():
         'Model/Year': request.form.get('model_year'),
         'Type': request.form.get('type'),
         'Axis Configuration': request.form.get('axis_config'),
+        'X-axis Travel': request.form.get('x_travel'),
+        'Y-axis Travel': request.form.get('y_travel'),
+        'Z-axis Travel': request.form.get('z_travel'),
+        'A-axis Travel': request.form.get('a_travel'),
+        'B-axis Travel': request.form.get('b_travel'),
+        'C-axis Travel': request.form.get('c_travel'),
+        'Max Part Size': request.form.get('max_part_size'),
+        'Max Part Height': request.form.get('max_part_height'),
+        'Spindle Taper': request.form.get('spindle_taper'),
         'Spindle Power': request.form.get('spindle_power'),
-        'Controller': request.form.get('controller')
+        'Spindle Torque': request.form.get('spindle_torque'),
+        'Main Spindle Max RPM': request.form.get('main_spindle_rpm'),
+        'Aux Spindle Max RPM': request.form.get('aux_spindle_rpm'),
+        'Max Table Load': request.form.get('max_table_load'),
+        'Thru Coolant Pressure': request.form.get('coolant_pressure'),
+        'Pallet Type': request.form.get('pallet_type'),
+        'Positional Tolerance Standard': request.form.get('tolerance_std'),
+        'Positional Accuracy X/Y/Z': request.form.get('accuracy_xyz'),
+        'Positional Accuracy A/B/C': request.form.get('accuracy_abc'),
+        'Positional Accuracy Table': request.form.get('accuracy_table'),
+        'Angle Head': request.form.get('angle_head'),
+        'Controller': request.form.get('controller'),
+        'CAD Software': request.form.get('cad'),
+        'CAM Software': request.form.get('cam'),
+        'Timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
 
-    full_entry = {**session['vendor_data'], **session['current_machine'], **specs}
+    # Additional specs for special machines
+    if session['current_machine']['Machine'] in [
+        'Spark Erosion Drill', 'Spark Electrical Discharge Machining', 'Wire Electrical Discharge Machining'
+    ]:
+        specs.update({
+            'Wire Diameter': request.form.get('wire_dia'),
+            'Taper Degree': request.form.get('taper_deg'),
+            'Max Cutting Thickness': request.form.get('cutting_thickness'),
+            'Surface Finish (Ra)': request.form.get('surface_finish'),
+            'Electrode Diameter': request.form.get('electrode_dia'),
+            'Spindle Stroke': request.form.get('spindle_stroke'),
+            'Table Size': request.form.get('table_size'),
+            'Sink Size': request.form.get('sink_size'),
+        })
+
+    full_entry = {
+        **session['vendor_data'],
+        **session['current_machine'],
+        **specs
+    }
+
+    if 'machine_entries' not in session:
+        session['machine_entries'] = []
+
     session['machine_entries'].append(full_entry)
+    session.modified = True
+
+    # Save immediately to Excel
+    df = pd.DataFrame([full_entry])
+    if not os.path.exists(EXCEL_FILE):
+        df.to_excel(EXCEL_FILE, index=False)
+    else:
+        existing = pd.read_excel(EXCEL_FILE)
+        pd.concat([existing, df], ignore_index=True).to_excel(EXCEL_FILE, index=False)
 
     if 'add_another' in request.form:
         return redirect(url_for('machine_entry'))
@@ -106,26 +173,17 @@ def submit_specs():
 
 @app.route('/final_submit')
 def final_submit():
-    machine_entries = session.get('machine_entries', [])
-    if not machine_entries:
-        return "❌ No machines submitted.", 400
-
-    df_new = pd.DataFrame(machine_entries)
-
-    if os.path.exists(EXCEL_PATH):
-        df_old = pd.read_excel(EXCEL_PATH)
-        df_combined = pd.concat([df_old, df_new], ignore_index=True)
-    else:
-        df_combined = df_new
-
-    df_combined.to_excel(EXCEL_PATH, index=False)
-
+    if not session.get('machine_entries'):
+        return "❌ No machines submitted."
     session.clear()
-    return "✅ Submission successful. Data & images saved."
+    return "✅ All data saved to Excel successfully!"
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
+
+
 
 
 
