@@ -78,11 +78,32 @@ def submit_vendor():
 @app.route('/machine_entry', methods=['GET', 'POST'])
 def machine_entry():
     if request.method == 'POST':
-        machine_name = request.form.get('machine_name')
-        machine_size = request.form.get('machine_size')
+        machine_name = request.form.get('machine')
+        machine_size = request.form.get('size')
+        hour_rate = request.form.get('hour_rate')
+        machine_img = request.files.get('machine_images')
 
         if not machine_name or not machine_size:
             return "Missing machine name or size", 400
+
+        image_path = ''
+        if machine_img:
+            filename = datetime.now().strftime("%Y%m%d_%H%M%S_") + machine_img.filename
+            image_path = os.path.join(MACHINE_IMG_FOLDER, filename)
+            machine_img.save(image_path)
+
+        # Store machine info temporarily
+        session['current_machine'] = {
+            'name': machine_name,
+            'size': machine_size,
+            'hour_rate': hour_rate,
+            'image': image_path
+        }
+
+        return redirect(f'/specs_form?machine={machine_name}&size={machine_size}')
+
+    return render_template('machine_entry.html')
+
 
 
         image_path = ''
