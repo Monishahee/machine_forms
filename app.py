@@ -75,16 +75,15 @@ def submit_vendor():
 
     return redirect('/machine_entry')
 
-
 @app.route('/machine_entry', methods=['GET', 'POST'])
 def machine_entry():
     if request.method == 'POST':
         machine_name = request.form.get('machine_name')
         machine_size = request.form.get('machine_size')
-        machine_img = request.files.get('machine_image')
 
         if not machine_name or not machine_size:
             return "Missing machine name or size", 400
+
 
         image_path = ''
         if machine_img:
