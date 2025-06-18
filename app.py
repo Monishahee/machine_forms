@@ -7,8 +7,11 @@ from datetime import datetime
 app = Flask(__name__)
 app.secret_key = 'super_secret_key'
 
-UPLOAD_FOLDER = 'static/uploads'
-EXCEL_FILE = 'data/responses.xlsx'
+# Directories
+UPLOAD_FOLDER = os.path.join('static', 'uploads')
+EXCEL_FILE = os.path.join('data', 'responses.xlsx')
+
+# Ensure folders exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs('data', exist_ok=True)
 
@@ -71,6 +74,7 @@ def specs_form():
 @app.route('/submit_specs', methods=['POST'])
 def submit_specs():
     specs = {key: request.form.get(key, '') for key in request.form}
+
     machine_info = session.get('current_machine', {})
     machine_info.update(specs)
     session['machines'].append(machine_info)
@@ -85,14 +89,18 @@ def submit_specs():
             row['Machine Images'] = ', '.join(machine.get('Image Paths', []))
             all_rows.append(row)
 
-        df = pd.DataFrame(all_rows)
+        new_df = pd.DataFrame(all_rows)
 
+        # If file exists, append; else create new
         if os.path.exists(EXCEL_FILE):
-            existing_df = pd.read_excel(EXCEL_FILE)
-            df = pd.concat([existing_df, df], ignore_index=True)
+            existing_df = pd.read_excel(EXCEL_FILE, engine='openpyxl')
+            final_df = pd.concat([existing_df, new_df], ignore_index=True)
+        else:
+            final_df = new_df
 
-        df.to_excel(EXCEL_FILE, index=False)
+        final_df.to_excel(EXCEL_FILE, index=False, engine='openpyxl')
 
+        # Clear session
         session.pop('vendor_data', None)
         session.pop('machines', None)
         session.pop('current_machine', None)
