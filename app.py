@@ -113,7 +113,7 @@ def machine_entry():
 
         return redirect(f'/specs_form?machine={machine_name}&size={machine_size}')
 
-    return render_template('machine_form.html')
+    return render_template('machine_entry.html')
 
 
 
@@ -176,7 +176,7 @@ def final_submit():
             df_customer.to_excel(writer, sheet_name='Customer', index=False)
             df_machines.to_excel(writer, sheet_name='Machines', index=False)
 
-        return render_template('thank_you.html')
+        return render_template('final_submit.html')
 
     except Exception as e:
         return f"An error occurred: {str(e)}", 400
