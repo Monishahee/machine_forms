@@ -129,11 +129,12 @@ def submit_machine():
 
 
 
-@app.route('/specs_form', methods=['GET'])
+@app.route('/specs_form')
 def specs_form():
-    return render_template('specs_form.html',
-                           machine=session['current_machine']['name'],
-                           size=session['current_machine']['size'])
+    machine = request.args.get('machine')
+    size = request.args.get('size')
+    return render_template('specs_form.html', machine=machine, size=size)
+
 
 
 @app.route('/submit_specs', methods=['POST'])
