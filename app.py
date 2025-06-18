@@ -31,8 +31,6 @@ if not os.path.exists(EXCEL_PATH):
     df.to_excel(EXCEL_PATH, index=False)
 
 
-
-
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -65,18 +63,10 @@ def submit_vendor():
     if board_img and board_img.filename != '':
         image_path = os.path.join('uploads', board_img.filename)
         board_img.save(image_path)
-        vendor_data['Board Image Path'] = image_path
+        vendor_data['company_image'] = image_path
 
-    machine_imgs = request.files.getlist('machine_images')
-    for img in machine_imgs:
-        if img and img.filename != '':
-            img_path = os.path.join('uploads', img.filename)
-            img.save(img_path)
-
- 
     session['vendor_details'] = vendor_data
     return redirect('/machine_entry')
-
 
 
 @app.route('/machine_entry', methods=['GET', 'POST'])
@@ -91,26 +81,25 @@ def machine_entry():
             return "Missing machine name or size", 400
 
         image_paths = []
-             for img in machine_imgs:
-        if img:
-            filename = datetime.now().strftime("%Y%m%d_%H%M%S_") + img.filename
-            image_path = os.path.join(MACHINE_IMG_FOLDER, filename)
-            img.save(image_path)
-            image_paths.append(image_path)
-
+        for img in machine_imgs:
+            if img:
+                filename = datetime.now().strftime("%Y%m%d_%H%M%S_") + img.filename
+                image_path = os.path.join(MACHINE_IMG_FOLDER, filename)
+                img.save(image_path)
+                image_paths.append(image_path)
 
         # Store machine info temporarily
         session['current_machine'] = {
-    'name': machine_name,
-    'size': machine_size,
-    'hour_rate': hour_rate,
-    'image': ','.join(image_paths)
-}
-
+            'name': machine_name,
+            'size': machine_size,
+            'hour_rate': hour_rate,
+            'image': ','.join(image_paths)
+        }
 
         return redirect(f'/specs_form?machine={machine_name}&size={machine_size}')
 
     return render_template('machine_entry.html')
+
 
 @app.route('/specs_form')
 def specs_form():
@@ -123,7 +112,6 @@ def specs_form():
 def submit_specs():
     specs = {key: request.form[key] for key in request.form if key != 'action'}
 
-    # Get stored machine info
     current_machine = session.get('current_machine', {})
     entry = {
         'name': current_machine.get('name', ''),
@@ -133,12 +121,10 @@ def submit_specs():
         'specs': specs
     }
 
-    # Append to session
     machine_entries = session.get('machine_entries', [])
     machine_entries.append(entry)
     session['machine_entries'] = machine_entries
 
-    # Check which button was clicked
     action = request.form.get('action')
     if action == 'add':
         return redirect('/machine_entry')
@@ -148,11 +134,10 @@ def submit_specs():
         return "Unknown action", 400
 
 
-
-@app.route('/final_submit', methods=['POST'])
+@app.route('/final_submit', methods=['GET', 'POST'])
 def final_submit():
     try:
-        vendor = session.get('vendor_data', {})
+        vendor = session.get('vendor_details', {})
         machines = session.get('machine_entries', [])
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -166,9 +151,6 @@ def final_submit():
                 "Email": vendor.get('email'),
                 "Phone Number": vendor.get('phone'),
                 "GSTIN": vendor.get('gstin'),
-                "Contact Name": vendor.get('contact_name'),
-                "Contact No": vendor.get('contact_number'),
-                "Mail ID": vendor.get('mail_id'),
                 "Website": vendor.get('website'),
                 "Payment Terms": vendor.get('payment_terms'),
                 "Associated From": vendor.get('associated_from'),
