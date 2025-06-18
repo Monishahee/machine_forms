@@ -104,26 +104,6 @@ def machine_entry():
 
     return render_template('machine_entry.html')
 
-
-
-        image_path = ''
-        if machine_img:
-            filename = datetime.now().strftime("%Y%m%d_%H%M%S_") + machine_img.filename
-            image_path = os.path.join(MACHINE_IMG_FOLDER, filename)
-            machine_img.save(image_path)
-
-        # Store machine info temporarily for specs
-        session['current_machine'] = {
-            'name': machine_name,
-            'size': machine_size,
-            'image': image_path
-        }
-
-        return redirect(f'/specs_form?machine={machine_name}&size={machine_size}')
-
-    return render_template('machine_entry.html')
-
-
 @app.route('/specs_form')
 def specs_form():
     machine = request.args.get('machine')
