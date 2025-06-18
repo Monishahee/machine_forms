@@ -122,11 +122,12 @@ def final_submit():
     df_combined.to_excel(EXCEL_FILE, index=False)
 
     session.clear()
-    return "✅ Submission successful. Data and images saved to Excel and folders."
-    if __name__ == '__main__':
-       import os
-       port = int(os.environ.get("PORT", 5000))
-       app.run(host="0.0.0.0", port=port, debug=True)
+import os
+
+if __name__ == '__main__':
+    port = int(os.environ.get("PORT", 5000))  # Use Render's assigned port or 5000 locally
+    app.run(host='0.0.0.0', port=port)
+
 
 
 
