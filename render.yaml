@@ -5,6 +5,7 @@ services:
     runtime: python
     buildCommand: pip install -r requirements.txt
     startCommand: python app.py
+    pythonVersion: 3.10
 envVars:
       - key: GOOGLE_APPLICATION_CREDENTIALS
         value: serviceAccountKey.json
