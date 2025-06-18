@@ -81,24 +81,28 @@ def machine_entry():
         machine_name = request.form.get('machine')
         machine_size = request.form.get('size')
         hour_rate = request.form.get('hour_rate')
-        machine_img = request.files.get('machine_images')
+        machine_imgs = request.files.getlist('machine_images')
 
         if not machine_name or not machine_size:
             return "Missing machine name or size", 400
 
-        image_path = ''
-        if machine_img:
-            filename = datetime.now().strftime("%Y%m%d_%H%M%S_") + machine_img.filename
+        image_paths = []
+             for img in machine_imgs:
+        if img:
+            filename = datetime.now().strftime("%Y%m%d_%H%M%S_") + img.filename
             image_path = os.path.join(MACHINE_IMG_FOLDER, filename)
-            machine_img.save(image_path)
+            img.save(image_path)
+            image_paths.append(image_path)
+
 
         # Store machine info temporarily
         session['current_machine'] = {
-            'name': machine_name,
-            'size': machine_size,
-            'hour_rate': hour_rate,
-            'image': image_path
-        }
+    'name': machine_name,
+    'size': machine_size,
+    'hour_rate': hour_rate,
+    'image': ','.join(image_paths)
+}
+
 
         return redirect(f'/specs_form?machine={machine_name}&size={machine_size}')
 
