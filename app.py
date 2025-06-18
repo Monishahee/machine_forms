@@ -42,25 +42,38 @@ def index():
 @app.route('/submit_vendor', methods=['POST'])
 def submit_vendor():
     vendor_data = {
-        'company_name': request.form['company_name'],
-        'vendor_name': request.form['vendor_name'],
-        'address': request.form['address'],
-        'email': request.form['email'],
-        'phone': request.form['phone'],
-        'gstin': request.form['gstin'],
-        'website': request.form['website'],
-        'payment_terms': request.form['payment_terms'],
-        'associated_from': request.form['associated_from'],
-        'validity': request.form['validity'],
-        'approved_by': request.form['approved_by'],
-        'identification': request.form['identification'],
-        'feedback': request.form['feedback'],
-        'remarks': request.form['remarks'],
-        'enquired_part': request.form['enquired_part'],
-        'visited_date': request.form['visited_date'],
-        'nda_signed': request.form['nda_signed'],
-        'detailed_evaluation': request.form['detailed_evaluation']
+        'company_name': request.form.get('company_name', ''),
+        'vendor_name': request.form.get('vendor_name', ''),
+        'address': request.form.get('address', ''),
+        'email': request.form.get('email', ''),
+        'phone': request.form.get('phone', ''),
+        'gstin': request.form.get('gstin', ''),
+        'website': request.form.get('website', ''),
+        'payment_terms': request.form.get('payment_terms', ''),
+        'associated_from': request.form.get('associated_from', ''),
+        'validity': request.form.get('validity', ''),
+        'approved_by': request.form.get('approved_by', ''),
+        'identification': request.form.get('identification', ''),
+        'feedback': request.form.get('feedback', ''),
+        'remarks': request.form.get('remarks', ''),
+        'enquired_part': request.form.get('enquired_part', ''),
+        'visited_date': request.form.get('visited_date', ''),
+        'nda_signed': request.form.get('nda_signed', ''),
+        'detailed_evaluation': request.form.get('detailed_evaluation', '')
     }
+
+    board_img = request.files.get('board_image')
+    if board_img and board_img.filename:
+        filename = datetime.now().strftime("%Y%m%d_%H%M%S_") + board_img.filename
+        image_path = os.path.join(COMPANY_IMG_FOLDER, filename)
+        board_img.save(image_path)
+        vendor_data['company_image'] = image_path
+    else:
+        vendor_data['company_image'] = ""
+
+    session['vendor_data'] = vendor_data
+    session['machine_specs'] = []  # Reset list
+    return redirect('/machine_entry')
 
     board_img = request.files.get('board_image')
     if board_img and board_img.filename != '':
