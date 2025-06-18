@@ -107,19 +107,34 @@ def specs_form():
     size = request.args.get('size')
     return render_template('specs_form.html', machine=machine, size=size)
 
-
 @app.route('/submit_specs', methods=['POST'])
 def submit_specs():
-    specs = {key: request.form[key] for key in request.form if key != 'action'}
+   
+    specs = {key: request.form[key] for key in request.form if key not in ['action', 'machine', 'size']}
+    machine = request.form['machine']
+    size = request.form['size']
 
-    current_machine = session.get('current_machine', {})
-    entry = {
-        'name': current_machine.get('name', ''),
-        'size': current_machine.get('size', ''),
-        'hour_rate': current_machine.get('hour_rate', ''),
-        'image': current_machine.get('image', ''),
-        'specs': specs
+    
+    machine_entry = {
+        'Machine': machine,
+        'Size': size,
     }
+    machine_entry.update(specs)
+
+    
+    if 'machine_specs' not in session:
+        session['machine_specs'] = []
+    machine_data = session['machine_specs']
+    machine_data.append(machine_entry)
+    session['machine_specs'] = machine_data
+
+    
+    if request.form['action'] == 'add':
+        return redirect(url_for('select_machine'))
+    elif request.form['action'] == 'submit':
+        return redirect(url_for('final_submit'))
+    else:
+        return "Invalid action", 400
 
     machine_entries = session.get('machine_entries', [])
     machine_entries.append(entry)
@@ -136,10 +151,34 @@ def submit_specs():
 
 @app.route('/final_submit', methods=['GET', 'POST'])
 def final_submit():
+    vendor_data = session.get('vendor_data', {})
+    machine_data = session.get('machine_specs', [])
+
+    if not vendor_data or not machine_data:
+        return "Missing vendor or machine data", 400
+
+    # Load existing Excel or start new
     try:
-        vendor = session.get('vendor_details', {})
-        machines = session.get('machine_entries', [])
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        df_existing = pd.read_excel(EXCEL_FILE)
+    except FileNotFoundError:
+        df_existing = pd.DataFrame()
+
+    # Combine each machine entry with vendor data
+    all_rows = []
+    for m in machine_data:
+        combined = {**vendor_data, **m}
+        all_rows.append(combined)
+
+    df_new = pd.DataFrame(all_rows)
+    df_final = pd.concat([df_existing, df_new], ignore_index=True)
+    df_final.to_excel(EXCEL_FILE, index=False)
+
+    # Clear session
+    session.pop('vendor_data', None)
+    session.pop('machine_specs', None)
+
+    return "Data successfully saved to Excel!"
+
 
         all_rows = []
         for m in machines:
