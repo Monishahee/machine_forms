@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, session, url_for
+from flask_session import Session
 import os
 import pandas as pd
 import json
@@ -7,16 +8,19 @@ from datetime import datetime
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
+app.config['SESSION_TYPE'] = 'filesystem'
+Session(app)
+
 # Folder paths
-UPLOAD_FOLDER = 'uploads'
+UPLOAD_FOLDER = '/tmp/uploads'
 COMPANY_IMG_FOLDER = os.path.join(UPLOAD_FOLDER, 'company_board')
 MACHINE_IMG_FOLDER = os.path.join(UPLOAD_FOLDER, 'machine_images')
-EXCEL_PATH = 'data/responses.xlsx'
+EXCEL_PATH = '/tmp/responses.xlsx'
 
 # Create directories
 os.makedirs(COMPANY_IMG_FOLDER, exist_ok=True)
 os.makedirs(MACHINE_IMG_FOLDER, exist_ok=True)
-os.makedirs('data', exist_ok=True)
+
 
 # Create Excel file if not exists
 if not os.path.exists(EXCEL_PATH):
