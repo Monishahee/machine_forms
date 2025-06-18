@@ -31,7 +31,7 @@ if not os.path.exists(EXCEL_PATH):
     df.to_excel(EXCEL_PATH, index=False)
 
 
-# ---------------------- ROUTES ------------------------
+
 
 @app.route('/')
 def index():
@@ -183,7 +183,6 @@ def final_submit():
         return f"An error occurred: {str(e)}", 500
 
 
-# ---------------------- MAIN ------------------------
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
