@@ -106,6 +106,16 @@ def submit_specs():
         session.pop('current_machine', None)
 
         return render_template('final_submit.html')
+@app.route('/view_responses')
+def view_responses():
+    try:
+        df = pd.read_excel(EXCEL_FILE, engine='openpyxl')
+        html_table = df.to_html(classes='table table-striped', index=False)
+    except Exception as e:
+        html_table = f"<p style='color:red;'>Error loading file: {e}</p>"
+
+    return render_template('view_responses.html', table=html_table)
+
 
 
 if __name__ == '__main__':
