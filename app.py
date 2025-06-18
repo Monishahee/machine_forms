@@ -22,7 +22,7 @@ os.makedirs('data', exist_ok=True)
 if not os.path.exists(EXCEL_PATH):
     df = pd.DataFrame(columns=[
         "Timestamp", "Company Name", "Vendor Manager", "Address", "Email", "Phone Number",
-        "GSTIN", "Contact Name", "Contact No", "Mail ID", "Website", "Payment Terms",
+        "GSTIN", "Website", "Payment Terms",
         "Associated From", "Validity of Approval", "Approved By", "Identification",
         "Feedback", "Remarks", "Enquired Part", "Visited Date", "NDA Signed",
         "Detailed Evaluation", "Board Image", "Machine Name", "Machine Size",
@@ -47,9 +47,6 @@ def submit_vendor():
         'email': request.form['email'],
         'phone': request.form['phone'],
         'gstin': request.form['gstin'],
-        'contact_name': request.form['contact_name'],
-        'contact_number': request.form['contact_number'],
-        'mail_id': request.form['mail_id'],
         'website': request.form['website'],
         'payment_terms': request.form['payment_terms'],
         'associated_from': request.form['associated_from'],
