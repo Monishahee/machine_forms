@@ -9,7 +9,7 @@
 
     <h2>Machine Entry Form</h2>
 
-    <form method="POST" action="/submit_machine" enctype="multipart/form-data">
+    <form method="POST" action="/submit_machine">
         <label for="machine">Select Machine<span style="color:red">*</span>:</label>
         <select name="machine" required>
             <option value="">-- Select Machine --</option>
@@ -52,7 +52,7 @@
         <input type="file" name="machine_images" accept="image/*" multiple required>
 
         <br>
-        <button type="submit" class="submit-btn">Next</button>
+        <button type="submit">Next</button>
     </form>
 
 </body>
