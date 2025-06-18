@@ -113,7 +113,7 @@ def machine_entry():
 
         return redirect(f'/specs_form?machine={machine_name}&size={machine_size}')
 
-    return render_template('machine_entry.html')
+    return render_template('machine_form.html')
 
 
 
@@ -154,11 +154,33 @@ def submit_specs():
     session['machine_entries'].append(machine_data)
     return redirect('/machine_entry')  # allow adding more
 
-
-@app.route('/final_submit', methods=['GET'])
+@app.route('/final_submit', methods=['POST'])
 def final_submit():
-    if 'vendor_data' not in session or 'machine_entries' not in session:
-        return "❌ Session expired or missing data.", 400
+    try:
+        # Get existing session data
+        customer_data = session.get('customer_data', {})
+        machine_entries = session.get('machine_entries', [])
+
+        # Combine everything into one dictionary
+        final_data = {
+            'customer_details': customer_data,
+            'machines': machine_entries
+        }
+
+        # Save to Excel file
+        df_customer = pd.DataFrame([customer_data])
+        df_machines = pd.DataFrame(machine_entries)
+
+        file_path = os.path.join(DATA_FOLDER, 'responses.xlsx')
+        with pd.ExcelWriter(file_path, engine='openpyxl', mode='a' if os.path.exists(file_path) else 'w') as writer:
+            df_customer.to_excel(writer, sheet_name='Customer', index=False)
+            df_machines.to_excel(writer, sheet_name='Machines', index=False)
+
+        return render_template('thank_you.html')
+
+    except Exception as e:
+        return f"An error occurred: {str(e)}", 400
+
 
     vendor = session['vendor_data']
     machines = session['machine_entries']
