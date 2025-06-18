@@ -119,11 +119,14 @@ def machine_entry():
 
 @app.route('/submit_machine', methods=['POST'])
 def submit_machine():
-    session['current_machine'] = {
-        'name': request.form['machine_name'],
-        'size': request.form['machine_size']
-    }
-    return redirect('/specs_form')
+    machine = request.form.get('machine')
+    size = request.form.get('size')
+
+    if not machine or not size:
+        return "Bad Request: Missing data", 400
+
+    return redirect(url_for('specs_form', machine=machine, size=size))
+
 
 
 @app.route('/specs_form', methods=['GET'])
