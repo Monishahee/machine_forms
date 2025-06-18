@@ -1,4 +1,5 @@
 Flask
+Flask-Session
 pandas
 openpyxl
 Werkzeug
