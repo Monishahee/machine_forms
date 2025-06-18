@@ -1,128 +1,151 @@
-from flask import Flask, render_template, request, redirect, url_for
-import pandas as pd
+from flask import Flask, render_template, request, redirect, session
 import os
-from werkzeug.utils import secure_filename
-import json 
-
+import pandas as pd
+import json
+from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
+# Upload folders
 UPLOAD_FOLDER = 'uploads'
-EXCEL_FILE = 'data/responses.xlsx'
+COMPANY_IMG_FOLDER = os.path.join(UPLOAD_FOLDER, 'company_board')
+MACHINE_IMG_FOLDER = os.path.join(UPLOAD_FOLDER, 'machine_images')
+EXCEL_PATH = 'data/responses.xlsx'
 
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+# Create directories
+os.makedirs(COMPANY_IMG_FOLDER, exist_ok=True)
+os.makedirs(MACHINE_IMG_FOLDER, exist_ok=True)
 os.makedirs('data', exist_ok=True)
 
-# Excel init
-if not os.path.exists(EXCEL_FILE):
-    df = pd.DataFrame(columns=["Company Name", "Vendor Name", "Address", "Machine", "Size", "Hour Rate", "Image Path", "Specs", "Timestamp"])
-    df.to_excel(EXCEL_FILE, index=False)
+# If Excel doesn't exist, create with headers
+if not os.path.exists(EXCEL_PATH):
+    df = pd.DataFrame(columns=[
+        "Timestamp", "Company Name", "Vendor Manager", "Address", "Email", "Phone Number",
+        "GSTIN", "Contact Name", "Contact No", "Mail ID", "Website", "Payment Terms",
+        "Board Image", "Machine Name", "Machine Size", "Machine Image", "Specs"
+    ])
+    df.to_excel(EXCEL_PATH, index=False)
+
 
 @app.route('/')
-def vendor_form():
-    return render_template('vendor_form.html')
+def index():
+    return render_template('index.html')
+
 
 @app.route('/submit_vendor', methods=['POST'])
 def submit_vendor():
-    session['vendor_data'] = {
-        'Company Name': request.form.get('company_name'),
-        'Vendor Name': request.form.get('vendor_name'),
-        'Address': request.form.get('address'),
+    vendor_data = {
+        'company_name': request.form['company_name'],
+        'vendor_manager': request.form['vendor_manager'],
+        'address': request.form['address'],
+        'email': request.form['email'],
+        'phone': request.form['phone'],
+        'gstin': request.form['gstin'],
+        'contact_name': request.form['contact_name'],
+        'contact_no': request.form['contact_no'],
+        'mail_id': request.form['mail_id'],
+        'website': request.form['website'],
+        'payment_terms': request.form['payment_terms']
     }
-    session['machine_entries'] = []
-    return redirect(url_for('machine_entry'))
 
-@app.route('/machine_entry')
+    board_img = request.files.get('board_image')
+    if board_img:
+        filename = datetime.now().strftime("%Y%m%d_%H%M%S_") + board_img.filename
+        board_img_path = os.path.join(COMPANY_IMG_FOLDER, filename)
+        board_img.save(board_img_path)
+        vendor_data['board_image'] = board_img_path
+    else:
+        vendor_data['board_image'] = ''
+
+    session['vendor_data'] = vendor_data
+    session['machine_entries'] = []  # clear previous
+    return redirect('/machine_entry')
+
+
+@app.route('/machine_entry', methods=['GET', 'POST'])
 def machine_entry():
-    machines = [
-        'Vertical Turning Turret', 'Vertical Turning Ram', 'Turning Lathe', 'Turning CNC',
-        'Conventional Milling', '3 Axis Vertical Machining Center', '3 Axis Horizontal Machining Center',
-        '4 Axis Vertical Machining Center', '4 Axis Horizontal Machining Center', '4 Axis Turn Mill',
-        '5 axis Milling', '5 Axis Mill Turn', '5 Axis Turn Mill', 'Surface Grinding',
-        'Cylindrical Grinding', 'Spark Erosion Drill', 'Spark Electrical Discharge Machining',
-        'Wire Electrical Discharge Machining'
-    ]
-    sizes = ['S1', 'S2', 'M1', 'M2', 'L1', 'L2']
-    return render_template('machine_entry.html', machines=machines, sizes=sizes)
+    return render_template('machine_entry.html')
+
 
 @app.route('/submit_machine', methods=['POST'])
 def submit_machine():
-    session['selected_machine'] = request.form.get('machine')
-    session['selected_size'] = request.form.get('size')
-    session['hour_rate'] = request.form.get('hour_rate')
+    session['current_machine'] = {
+        'name': request.form['machine_name'],
+        'size': request.form['machine_size']
+    }
+    return redirect('/specs_form')
 
-    image = request.files.get('machine_image')
-    image_path = ''
 
-    if image and image.filename:
-        folder_name = f"{session['selected_machine'].replace(' ', '_')}_{session['selected_size']}"
-        save_dir = os.path.join(UPLOAD_FOLDER, folder_name)
-        os.makedirs(save_dir, exist_ok=True)
-
-        filename = secure_filename(image.filename)
-        image_path = os.path.join(save_dir, filename)
-        image.save(image_path)
-
-    session['machine_image'] = image_path
-    return redirect(url_for('specs_form'))
-
-@app.route('/specs_form')
+@app.route('/specs_form', methods=['GET'])
 def specs_form():
-    return render_template(
-        'specs_form.html',
-        machine=session.get('selected_machine'),
-        size=session.get('selected_size')
-    )
+    return render_template('specs_form.html',
+                           machine=session['current_machine']['name'],
+                           size=session['current_machine']['size'])
+
 
 @app.route('/submit_specs', methods=['POST'])
 def submit_specs():
-    spec_fields = request.form.to_dict()
+    specs = {key: request.form[key] for key in request.form}
+
+    machine_img = request.files.get('machine_image')
+    img_path = ''
+    if machine_img:
+        filename = datetime.now().strftime("%Y%m%d_%H%M%S_") + machine_img.filename
+        img_path = os.path.join(MACHINE_IMG_FOLDER, filename)
+        machine_img.save(img_path)
+
     machine_data = {
-        'Machine': session.get('selected_machine'),
-        'Size': session.get('selected_size'),
-        'Hour Rate': session.get('hour_rate'),
-        'Image Path': session.get('machine_image'),
-        'Specs': spec_fields
+        'name': session['current_machine']['name'],
+        'size': session['current_machine']['size'],
+        'specs': specs,
+        'image': img_path
     }
 
     session['machine_entries'].append(machine_data)
-    session.modified = True
+    return redirect('/machine_entry')  # allow adding more
 
-    if 'add_another' in request.form:
-        return redirect(url_for('machine_entry'))
-    else:
-        return redirect(url_for('final_submit'))
 
-@app.route('/final_submit')
+@app.route('/final_submit', methods=['GET'])
 def final_submit():
-    vendor_data = session.get('vendor_data', {})
-    machine_entries = session.get('machine_entries', [])
+    if 'vendor_data' not in session or 'machine_entries' not in session:
+        return "❌ Session expired or missing data.", 400
 
-    if not machine_entries:
-        return "❌ No machines submitted.", 400
+    vendor = session['vendor_data']
+    machines = session['machine_entries']
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    rows = []
-    for entry in machine_entries:
+    all_rows = []
+    for m in machines:
         row = {
-            "Company Name": vendor_data.get('Company Name'),
-            "Vendor Name": vendor_data.get('Vendor Name'),
-            "Address": vendor_data.get('Address'),
-            "Machine": entry['Machine'],
-            "Size": entry['Size'],
-            "Hour Rate": entry['Hour Rate'],
-            "Image Path": entry['Image Path'],
-            "Specs": json.dumps(entry['Specs']),
-            "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            "Timestamp": timestamp,
+            "Company Name": vendor['company_name'],
+            "Vendor Manager": vendor['vendor_manager'],
+            "Address": vendor['address'],
+            "Email": vendor['email'],
+            "Phone Number": vendor['phone'],
+            "GSTIN": vendor['gstin'],
+            "Contact Name": vendor['contact_name'],
+            "Contact No": vendor['contact_no'],
+            "Mail ID": vendor['mail_id'],
+            "Website": vendor['website'],
+            "Payment Terms": vendor['payment_terms'],
+            "Board Image": vendor['board_image'],
+            "Machine Name": m['name'],
+            "Machine Size": m['size'],
+            "Machine Image": m['image'],
+            "Specs": json.dumps(m['specs'])
         }
-        rows.append(row)
+        all_rows.append(row)
 
-    df_existing = pd.read_excel(EXCEL_FILE)
-    df_new = pd.DataFrame(rows)
-    df_combined = pd.concat([df_existing, df_new], ignore_index=True)
-    df_combined.to_excel(EXCEL_FILE, index=False)
+    # Append to Excel
+    existing_df = pd.read_excel(EXCEL_PATH)
+    new_df = pd.DataFrame(all_rows)
+    combined_df = pd.concat([existing_df, new_df], ignore_index=True)
+    combined_df.to_excel(EXCEL_PATH, index=False)
 
-    session.clear()
+    return render_template('final_submit.html', vendor=vendor, machines=machines)
+
 import os
 
 if __name__ == '__main__':
