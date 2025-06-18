@@ -113,22 +113,32 @@ def specs_form():
 
 @app.route('/submit_specs', methods=['POST'])
 def submit_specs():
-    specs = {key: request.form[key] for key in request.form}
+    specs = {key: request.form[key] for key in request.form if key != 'action'}
 
-    # Append to session machine entries
+    # Get stored machine info
     current_machine = session.get('current_machine', {})
     entry = {
         'name': current_machine.get('name', ''),
         'size': current_machine.get('size', ''),
+        'hour_rate': current_machine.get('hour_rate', ''),
         'image': current_machine.get('image', ''),
         'specs': specs
     }
 
+    # Append to session
     machine_entries = session.get('machine_entries', [])
     machine_entries.append(entry)
     session['machine_entries'] = machine_entries
 
-    return redirect('/machine_entry')
+    # Check which button was clicked
+    action = request.form.get('action')
+    if action == 'add':
+        return redirect('/machine_entry')
+    elif action == 'submit':
+        return redirect('/final_submit')
+    else:
+        return "Unknown action", 400
+
 
 
 @app.route('/final_submit', methods=['POST'])
