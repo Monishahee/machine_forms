@@ -22,10 +22,9 @@ os.makedirs('data', exist_ok=True)
 if not os.path.exists(EXCEL_PATH):
     df = pd.DataFrame(columns=[
         "Timestamp", "Company Name", "Vendor Manager", "Address", "Email", "Phone Number",
-        "GSTIN", "Website", "Payment Terms",
-        "Associated From", "Validity of Approval", "Approved By", "Identification",
-        "Feedback", "Remarks", "Enquired Part", "Visited Date", "NDA Signed",
-        "Detailed Evaluation", "Board Image", "Machine Name", "Machine Size",
+        "GSTIN", "Website", "Payment Terms", "Associated From", "Validity of Approval",
+        "Approved By", "Identification", "Feedback", "Remarks", "Enquired Part", "Visited Date",
+        "NDA Signed", "Detailed Evaluation", "Board Image", "Machine Name", "Machine Size",
         "Machine Image", "Specs"
     ])
     df.to_excel(EXCEL_PATH, index=False)
@@ -61,7 +60,8 @@ def submit_vendor():
 
     board_img = request.files.get('board_image')
     if board_img and board_img.filename != '':
-        image_path = os.path.join('uploads', board_img.filename)
+        filename = datetime.now().strftime("%Y%m%d_%H%M%S_") + board_img.filename
+        image_path = os.path.join(COMPANY_IMG_FOLDER, filename)
         board_img.save(image_path)
         vendor_data['company_image'] = image_path
 
@@ -88,7 +88,6 @@ def machine_entry():
                 img.save(image_path)
                 image_paths.append(image_path)
 
-        # Store machine info temporarily
         session['current_machine'] = {
             'name': machine_name,
             'size': machine_size,
@@ -107,38 +106,23 @@ def specs_form():
     size = request.args.get('size')
     return render_template('specs_form.html', machine=machine, size=size)
 
+
 @app.route('/submit_specs', methods=['POST'])
 def submit_specs():
-   
     specs = {key: request.form[key] for key in request.form if key not in ['action', 'machine', 'size']}
-    machine = request.form['machine']
-    size = request.form['size']
+    current_machine = session.get('current_machine', {})
 
-    
     machine_entry = {
-        'Machine': machine,
-        'Size': size,
+        'name': current_machine.get('name', ''),
+        'size': current_machine.get('size', ''),
+        'hour_rate': current_machine.get('hour_rate', ''),
+        'image': current_machine.get('image', ''),
+        'specs': specs
     }
-    machine_entry.update(specs)
 
-    
     if 'machine_specs' not in session:
         session['machine_specs'] = []
-    machine_data = session['machine_specs']
-    machine_data.append(machine_entry)
-    session['machine_specs'] = machine_data
-
-    
-    if request.form['action'] == 'add':
-        return redirect(url_for('select_machine'))
-    elif request.form['action'] == 'submit':
-        return redirect(url_for('final_submit'))
-    else:
-        return "Invalid action", 400
-
-    machine_entries = session.get('machine_entries', [])
-    machine_entries.append(entry)
-    session['machine_entries'] = machine_entries
+    session['machine_specs'].append(machine_entry)
 
     action = request.form.get('action')
     if action == 'add':
@@ -146,41 +130,21 @@ def submit_specs():
     elif action == 'submit':
         return redirect('/final_submit')
     else:
-        return "Unknown action", 400
+        return "Invalid action", 400
 
 
 @app.route('/final_submit', methods=['GET', 'POST'])
 def final_submit():
-    vendor_data = session.get('vendor_data', {})
-    machine_data = session.get('machine_specs', [])
-
-    if not vendor_data or not machine_data:
-        return "Missing vendor or machine data", 400
-
-    # Load existing Excel or start new
     try:
-        df_existing = pd.read_excel(EXCEL_FILE)
-    except FileNotFoundError:
-        df_existing = pd.DataFrame()
+        vendor = session.get('vendor_data', {})
+        machines = session.get('machine_specs', [])
 
-    # Combine each machine entry with vendor data
-    all_rows = []
-    for m in machine_data:
-        combined = {**vendor_data, **m}
-        all_rows.append(combined)
+        if not vendor or not machines:
+            return "Missing vendor or machine data", 400
 
-    df_new = pd.DataFrame(all_rows)
-    df_final = pd.concat([df_existing, df_new], ignore_index=True)
-    df_final.to_excel(EXCEL_FILE, index=False)
-
-    # Clear session
-    session.pop('vendor_data', None)
-    session.pop('machine_specs', None)
-
-    return "Data successfully saved to Excel!"
-
-
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         all_rows = []
+
         for m in machines:
             row = {
                 "Timestamp": timestamp,
@@ -209,13 +173,14 @@ def final_submit():
                 "Specs": json.dumps(m['specs'])
             }
             all_rows.append(row)
-            print("Saving to Excel:", all_rows)
-
 
         existing_df = pd.read_excel(EXCEL_PATH)
         new_df = pd.DataFrame(all_rows)
         final_df = pd.concat([existing_df, new_df], ignore_index=True)
         final_df.to_excel(EXCEL_PATH, index=False)
+
+        session.pop('vendor_data', None)
+        session.pop('machine_specs', None)
 
         return render_template('final_submit.html', vendor=vendor, machines=machines)
 
