@@ -3,9 +3,9 @@ services:
   - type: web
     name: vendor-machine-form
     runtime: python version 3.10
-    buildCommand: ""
-    startCommand: gunicorn app:app
-    envVars:
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+envVars:
       - key: GOOGLE_APPLICATION_CREDENTIALS
         value: serviceAccountKey.json
     staticPublishPath: static
