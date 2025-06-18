@@ -98,10 +98,15 @@ def submit_specs():
 
     return render_template('final_submit.html')
 
-@app.route('/view')
+@app.route('/view_responses')
 def view_responses():
-    records = sheet.get_all_records()
-    return render_template('view_responses.html', responses=records)
+    try:
+        df = pd.read_excel(EXCEL_FILE)
+        table_html = df.to_html(classes='table', index=False)
+        return render_template('view_responses.html', tables=table_html)
+    except Exception as e:
+        return f"Error reading Excel file: {e}"
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=10000, debug=True)
