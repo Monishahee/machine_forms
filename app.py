@@ -61,19 +61,23 @@ def submit_vendor():
         'detailed_evaluation': request.form['detailed_evaluation']
     }
 
-    board_img = request.files.get('company_image')
-    if board_img:
-        filename = datetime.now().strftime("%Y%m%d_%H%M%S_") + board_img.filename
-        board_img_path = os.path.join(COMPANY_IMG_FOLDER, filename)
-        board_img.save(board_img_path)
-        vendor_data['company_image'] = board_img_path
-    else:
-        vendor_data['company_image'] = ''
+    board_img = request.files.get('board_image')
+    if board_img and board_img.filename != '':
+        image_path = os.path.join('uploads', board_img.filename)
+        board_img.save(image_path)
+        vendor_data['Board Image Path'] = image_path
 
-    session['vendor_data'] = vendor_data
-    session['machine_entries'] = []
+    machine_imgs = request.files.getlist('machine_images')
+    for img in machine_imgs:
+        if img and img.filename != '':
+            img_path = os.path.join('uploads', img.filename)
+            img.save(img_path)
 
+ 
+    session['vendor_details'] = vendor_data
     return redirect('/machine_entry')
+
+
 
 @app.route('/machine_entry', methods=['GET', 'POST'])
 def machine_entry():
