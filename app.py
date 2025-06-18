@@ -37,17 +37,38 @@ def index():
 def submit_vendor():
     vendor_data = {
         'company_name': request.form['company_name'],
-        'vendor_manager': request.form['vendor_manager'],
+        'vendor_name': request.form['vendor_name'],
         'address': request.form['address'],
         'email': request.form['email'],
         'phone': request.form['phone'],
         'gstin': request.form['gstin'],
-        'contact_name': request.form['contact_name'],
-        'contact_no': request.form['contact_no'],
-        'mail_id': request.form['mail_id'],
         'website': request.form['website'],
-        'payment_terms': request.form['payment_terms']
+        'payment_terms': request.form['payment_terms'],
+        'associated_from': request.form['associated_from'],
+        'validity': request.form['validity'],
+        'approved_by': request.form['approved_by'],
+        'identification': request.form['identification'],
+        'feedback': request.form['feedback'],
+        'remarks': request.form['remarks'],
+        'enquired_part': request.form['enquired_part'],
+        'visited_date': request.form['visited_date'],
+        'nda_signed': request.form['nda_signed'],
+        'detailed_evaluation': request.form['detailed_evaluation']
     }
+
+    # Fix: match the name in HTML
+    board_img = request.files.get('company_image')
+    if board_img:
+        filename = datetime.now().strftime("%Y%m%d_%H%M%S_") + board_img.filename
+        board_img_path = os.path.join(COMPANY_IMG_FOLDER, filename)
+        board_img.save(board_img_path)
+        vendor_data['company_image'] = board_img_path
+    else:
+        vendor_data['company_image'] = ''
+
+    session['vendor_data'] = vendor_data
+    session['machine_entries'] = []
+    return redirect('/machine_entry')
 
     board_img = request.files.get('board_image')
     if board_img:
@@ -120,22 +141,30 @@ def final_submit():
         row = {
             "Timestamp": timestamp,
             "Company Name": vendor['company_name'],
-            "Vendor Manager": vendor['vendor_manager'],
+            "Vendor Manager": vendor['vendor_name'],
             "Address": vendor['address'],
             "Email": vendor['email'],
             "Phone Number": vendor['phone'],
             "GSTIN": vendor['gstin'],
-            "Contact Name": vendor['contact_name'],
-            "Contact No": vendor['contact_no'],
-            "Mail ID": vendor['mail_id'],
             "Website": vendor['website'],
             "Payment Terms": vendor['payment_terms'],
-            "Board Image": vendor['board_image'],
+            "Associated From": vendor['associated_from'],
+            "Validity of Approval": vendor['validity'],
+            "Approved By": vendor['approved_by'],
+            "Identification": vendor['identification'],
+            "Feedback": vendor['feedback'],
+            "Remarks": vendor['remarks'],
+            "Enquired Part": vendor['enquired_part'],
+            "Visited Date": vendor['visited_date'],
+            "NDA Signed": vendor['nda_signed'],
+            "Detailed Evaluation": vendor['detailed_evaluation'],
+            "Board Image": vendor['company_image'],
             "Machine Name": m['name'],
             "Machine Size": m['size'],
             "Machine Image": m['image'],
-            "Specs": json.dumps(m['specs'])
-        }
+           "Specs": json.dumps(m['specs'])
+}
+
         all_rows.append(row)
 
     # Append to Excel
