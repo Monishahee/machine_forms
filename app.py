@@ -18,12 +18,22 @@ session_data = {}
 # Utility: Save data to Excel
 def save_to_excel(data):
     df = pd.DataFrame([data])
+    
+    # If file doesn't exist, write new Excel file
     if not os.path.exists(EXCEL_FILE):
-        df.to_excel(EXCEL_FILE, index=False)
+        df.to_excel(EXCEL_FILE, index=False, engine='openpyxl')
     else:
-        old = pd.read_excel(EXCEL_FILE, engine='openpyxl')
-        updated = pd.concat([old, df], ignore_index=True)
-        updated.to_excel(EXCEL_FILE, index=False)
+        try:
+            # Try reading existing data
+            existing = pd.read_excel(EXCEL_FILE, engine='openpyxl')
+            final_df = pd.concat([existing, df], ignore_index=True)
+            final_df.to_excel(EXCEL_FILE, index=False, engine='openpyxl')
+        except Exception as e:
+            print(f"Error reading Excel file: {e}")
+            print("Overwriting corrupted Excel file with fresh data.")
+            # Overwrite corrupted file with new data
+            df.to_excel(EXCEL_FILE, index=False, engine='openpyxl')
+
 
 @app.route('/')
 def index():
