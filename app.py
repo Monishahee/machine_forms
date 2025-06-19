@@ -128,7 +128,10 @@ def view_responses():
     if not os.path.exists(EXCEL_FILE):
         return "<h3>No responses yet.</h3>"
     df = pd.read_excel(EXCEL_FILE, engine='openpyxl')
-    return render_template('view_responses.html', tables=[df.values.tolist()], titles=df.columns.values)
+    return render_template('view_responses.html',
+                           tables=[df.values.tolist()],
+                           titles=df.columns.values)
+
 
 # Download Excel file
 @app.route('/download_excel')
