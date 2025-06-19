@@ -129,14 +129,20 @@ def view_responses():
         return "<h3>No responses yet.</h3>"
     df = pd.read_excel(EXCEL_FILE, engine='openpyxl')
 
-    # Replace image filenames with actual <img> tags
-    def format_images(val):
+    # Convert image filenames into <img> HTML tags
+    def format_image(val):
         if isinstance(val, str) and val.lower().endswith(('.jpg', '.jpeg', '.png')):
-            return f'<img src="/uploads/{val}" width="100">'
+            return f'<img src="/uploads/{val}" alt="Image">'
         return val
 
-    df = df.applymap(format_images)
-    return render_template('view_responses.html', tables=[df.to_html(escape=False, classes='table', index=False)], titles=df.columns.values)
+    df = df.applymap(format_image)
+
+    return render_template(
+        'view_responses.html',
+        tables=[df.to_html(classes='table', escape=False, index=False)],
+        titles=df.columns.values
+    )
+
 
 
 @app.route('/download_excel')
