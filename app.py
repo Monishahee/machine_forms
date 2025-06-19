@@ -2,17 +2,23 @@ from flask import Flask, render_template, request, redirect, url_for, send_from_
 import os
 import pandas as pd
 from werkzeug.utils import secure_filename
+import firebase_admin
+from firebase_admin import credentials, db
 
+# Flask app setup
 app = Flask(__name__)
-
-# Folder setup
 UPLOAD_FOLDER = 'uploads'
 DATA_FOLDER = 'data'
 EXCEL_FILE = os.path.join(DATA_FOLDER, 'responses.xlsx')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(DATA_FOLDER, exist_ok=True)
 
-# Temporary store
+# Initialize Firebase Admin
+cred = credentials.Certificate("serviceAccountKey.json")  # Place this JSON file in your root folder
+firebase_admin.initialize_app(cred, {
+    'databaseURL': 'https://machine-data-form-default-rtdb.firebaseio.com/'  # replace with your Firebase DB URL
+})
+
 session_data = {}
 
 def save_to_excel(data):
@@ -23,6 +29,10 @@ def save_to_excel(data):
         existing = pd.read_excel(EXCEL_FILE, engine='openpyxl')
         final_df = pd.concat([existing, df], ignore_index=True)
         final_df.to_excel(EXCEL_FILE, index=False, engine='openpyxl')
+
+def save_to_firebase(data):
+    ref = db.reference('responses')
+    ref.push(data)
 
 @app.route('/')
 def index():
@@ -60,6 +70,7 @@ def submit_vendor():
             session_data['company_image'] = filename
         else:
             session_data['company_image'] = ''
+
         return redirect('/machine_entry')
     except Exception as e:
         return f"Error in /submit_vendor: {str(e)}"
@@ -103,7 +114,10 @@ def submit_specs():
             session_data[field] = request.form.get(field, '')
 
         action = request.form.get('action')
+
+        # Save to Excel and Firebase
         save_to_excel(session_data.copy())
+        save_to_firebase(session_data.copy())
 
         if action == 'add':
             return redirect('/machine_entry')
@@ -140,6 +154,7 @@ def uploaded_file(filename):
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=10000)
+
 
 
 
