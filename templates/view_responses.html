@@ -1,83 +1,55 @@
+<!-- templates/view_responses.html -->
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
     <title>View Responses</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
         table {
             border-collapse: collapse;
             width: 100%;
-            margin-bottom: 20px;
         }
         th, td {
-            border: 1px solid #ccc;
-            padding: 10px;
-            vertical-align: top;
+            padding: 8px;
+            border: 1px solid #888;
+            text-align: left;
         }
         th {
-            background-color: #f2f2f2;
-        }
-        img {
-            max-height: 120px;
-            margin: 5px;
-        }
-        .download-button {
-            margin-bottom: 20px;
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #2c7be5;
-            color: white;
-            border-radius: 5px;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        .download-button:hover {
-            background-color: #1a5fc6;
+            background-color: #eee;
         }
     </style>
 </head>
 <body>
-    <h2>Submitted Vendor Responses</h2>
+    <h2>All Vendor Responses</h2>
 
-    <a href="{{ url_for('download_excel') }}" class="download-button">⬇ Download Excel</a>
+    <a href="{{ url_for('download_excel') }}" download>
+        <button>Download Excel</button>
+    </a>
 
-    <table>
-        <thead>
-            <tr>
-                {% for col in titles %}
-                    <th>{{ col }}</th>
-                {% endfor %}
-                <th>Company Image</th>
-                <th>Machine Images</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for i in range(tables[0]|length) %}
+    <br><br>
+
+    {% if tables %}
+        <table>
+            <thead>
                 <tr>
-                    {% for col in titles %}
-                        <td>{{ tables[0][i][loop.index0] }}</td>
+                    {% for title in titles %}
+                        <th>{{ title }}</th>
                     {% endfor %}
-
-                    <!-- Company Image -->
-                    <td>
-                        {% if tables[0][i][titles.index('company_image')] %}
-                            <img src="{{ url_for('uploaded_file', filename=tables[0][i][titles.index('company_image')]) }}" alt="Company Image">
-                        {% endif %}
-                    </td>
-
-                    <!-- Machine Images -->
-                    <td>
-                        {% if tables[0][i][titles.index('machine_images')] %}
-                            {% for img in tables[0][i][titles.index('machine_images')].split(', ') %}
-                                <img src="{{ url_for('uploaded_file', filename=img) }}" alt="Machine Image">
-                            {% endfor %}
-                        {% endif %}
-                    </td>
                 </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                {% for row in tables[0] %}
+                    <tr>
+                        {% for cell in row %}
+                            <td>{{ cell }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No responses found.</p>
+    {% endif %}
 </body>
 </html>
 
