@@ -131,6 +131,14 @@ def view_responses():
     return render_template('view_responses.html',
                            tables=[df.to_html(classes='table', index=False)],
                            titles=df.columns.values)
+from flask import send_file
+
+@app.route('/download_responses')
+def download_responses():
+    if os.path.exists(EXCEL_FILE):
+        return send_file(EXCEL_FILE, as_attachment=True)
+    return "<h3>No response file found to download.</h3>"
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=10000)
