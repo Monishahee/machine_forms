@@ -1,12 +1,14 @@
 services:
   - type: web
-    name: vendor-machine-form
+    name: vendor-machine-form-app
+    env: python
+    plan: free
     runtime: python
     buildCommand: pip install -r requirements.txt
     startCommand: python app.py
-    pythonVersion: 3.10
     envVars:
-      - key: GOOGLE_APPLICATION_CREDENTIALS
-        value: serviceAccountKey.json
-    staticPublishPath: static
+      - key: FLASK_ENV
+        value: production
+    autoDeploy: true
+
 
