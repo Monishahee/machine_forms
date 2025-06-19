@@ -25,9 +25,11 @@
         <tbody>
             {% for row in tables[0] %}
                 <tr>
-                    {% for cell, col in zip(row, titles) %}
+                    {% for i in range(titles | length) %}
                         <td>
-                            {% if col in ['company_image', 'machine_images'] %}
+                            {% set col = titles[i] %}
+                            {% set cell = row[i] %}
+                            {% if col in ['company_image', 'machine_images', 'board_image'] %}
                                 {% if cell %}
                                     {% for img in cell.split(', ') %}
                                         <a href="{{ url_for('uploaded_file', filename=img) }}" target="_blank">
@@ -48,6 +50,7 @@
     </table>
 </body>
 </html>
+
 
 
 
