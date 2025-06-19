@@ -6,63 +6,74 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 30px;
-            background-color: #f2f2f2;
+            background-color: #f9f9f9;
+            padding: 40px;
         }
+
         h2 {
-            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
         }
+
         .table-container {
             overflow-x: auto;
-            background-color: #fff;
+            background: white;
             padding: 20px;
-            border-radius: 8px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px #ccc;
         }
+
         table {
-            border-collapse: collapse;
             width: 100%;
-            margin-top: 10px;
+            border-collapse: collapse;
         }
-        th, td {
-            border: 1px solid #ccc;
-            padding: 10px;
-            text-align: left;
-            vertical-align: top;
-        }
+
         th {
             background-color: #0077cc;
             color: white;
+            padding: 10px;
             position: sticky;
             top: 0;
-            z-index: 1;
         }
+
+        td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            vertical-align: top;
+        }
+
         img {
-            max-width: 120px;
-            height: auto;
+            max-width: 100px;
+            max-height: 100px;
+            border-radius: 5px;
         }
+
         .download-btn {
             margin-top: 20px;
+            display: inline-block;
             padding: 10px 20px;
             background-color: #0077cc;
             color: white;
             border: none;
-            border-radius: 4px;
-            cursor: pointer;
+            border-radius: 5px;
             text-decoration: none;
         }
+
         .download-btn:hover {
             background-color: #005fa3;
         }
     </style>
 </head>
 <body>
-    <h2>All Submitted Responses</h2>
 
-    <div class="table-container">
-        {{ tables|safe }}
-    </div>
+<h2>All Submitted Responses</h2>
 
-    <a href="{{ url_for('download_excel') }}" class="download-btn">Download Excel</a>
+<div class="table-container">
+    {{ tables[0]|safe }}
+</div>
+
+<a class="download-btn" href="{{ url_for('download_excel') }}">Download Excel</a>
+
 </body>
 </html>
 
