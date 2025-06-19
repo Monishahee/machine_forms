@@ -125,12 +125,14 @@ def final_submit():
 # View responses
 @app.route('/view_responses')
 def view_responses():
-    if not os.path.exists(EXCEL_FILE):
-        return "<h3>No responses yet.</h3>"
-    df = pd.read_excel(EXCEL_FILE, engine='openpyxl')
-    return render_template('view_responses.html',
-                           tables=[df.values.tolist()],
-                           titles=df.columns.values)
+    try:
+        if not os.path.exists(EXCEL_FILE):
+            return "<h3>No responses yet.</h3>"
+        df = pd.read_excel(EXCEL_FILE, engine='openpyxl')
+        print("DataFrame Loaded:", df.columns.tolist())
+        return render_template('view_responses.html', tables=[df.values.tolist()], titles=df.columns.values)
+    except Exception as e:
+        return f"<h3>Error occurred: {e}</h3>"
 
 
 # Download Excel file
