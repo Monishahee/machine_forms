@@ -34,20 +34,27 @@ def index():
 # Vendor form submission
 @app.route('/submit_vendor', methods=['POST'])
 def submit_vendor():
-    session_data['company_name'] = request.form['company_name']
-    session_data['vendor_name'] = request.form['vendor_name']
-    session_data['address'] = request.form['address']
-    session_data['email'] = request.form['email']
-    session_data['phone'] = request.form['phone']
-    session_data['gstin'] = request.form['gstin']
-    session_data['contact_name'] = request.form['contact_name']
-    session_data['contact_no'] = request.form['contact_no']
-    session_data['contact_email'] = request.form['contact_email']
-    session_data['website'] = request.form['website']
-    session_data['payment_terms'] = request.form['payment_terms']
+    session_data['company_name'] = request.form.get('company_name', '')
+    session_data['vendor_name'] = request.form.get('vendor_name', '')
+    session_data['address'] = request.form.get('address', '')
+    session_data['email'] = request.form.get('email', '')
+    session_data['phone'] = request.form.get('phone', '')
+    session_data['gstin'] = request.form.get('gstin', '')
+    session_data['website'] = request.form.get('website', '')
+    session_data['payment_terms'] = request.form.get('payment_terms', '')
+    session_data['associated_from'] = request.form.get('associated_from', '')
+    session_data['validity'] = request.form.get('validity', '')
+    session_data['approved_by'] = request.form.get('approved_by', '')
+    session_data['identification'] = request.form.get('identification', '')
+    session_data['feedback'] = request.form.get('feedback', '')
+    session_data['remarks'] = request.form.get('remarks', '')
+    session_data['enquired_part'] = request.form.get('enquired_part', '')
+    session_data['visited_date'] = request.form.get('visited_date', '')
+    session_data['nda_signed'] = request.form.get('nda_signed', '')
+    session_data['detailed_evaluation'] = request.form.get('detailed_evaluation', '')
 
-    # Save uploaded company image
-    image = request.files.get('company_image')
+    # Save uploaded image (fix: use 'board_image')
+    image = request.files.get('board_image')
     if image and image.filename:
         filename = secure_filename(image.filename)
         image.save(os.path.join(UPLOAD_FOLDER, filename))
