@@ -109,7 +109,7 @@ def final_submit():
 def view_responses():
     if not os.path.exists(EXCEL_FILE):
         return "<h3>No responses yet.</h3>"
-    df = pd.read_excel(EXCEL_FILE)
+    df = pd.read_excel(EXCEL_FILE, engine='openpyxl')
     return render_template('view_responses.html', tables=[df.to_html(classes='table', index=False)], titles=df.columns.values)
 
 # Entry point
