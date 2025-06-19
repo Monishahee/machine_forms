@@ -1,40 +1,68 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>View Responses</title>
+    <title>All Responses</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            background-color: #f2f2f2;
+        }
+        h2 {
+            color: #333;
+        }
+        .table-container {
+            overflow-x: auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #0077cc;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        img {
+            max-width: 120px;
+            height: auto;
+        }
+        .download-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #0077cc;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .download-btn:hover {
+            background-color: #005fa3;
+        }
+    </style>
 </head>
 <body>
     <h2>All Submitted Responses</h2>
 
-    {% if tables %}
-        <table border="1">
-            <thead>
-                <tr>
-                    {% for title in titles %}
-                        <th>{{ title }}</th>
-                    {% endfor %}
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in tables[0] %}
-                    <tr>
-                        {% for item in row %}
-                            <td>{{ item }}</td>
-                        {% endfor %}
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <br><br>
-        <a href="{{ url_for('download_excel') }}">
-            <button>Download Excel</button>
-        </a>
-    {% else %}
-        <p>No responses yet.</p>
-    {% endif %}
+    <div class="table-container">
+        {{ tables|safe }}
+    </div>
 
-    <br><a href="/">← Back to Home</a>
+    <a href="{{ url_for('download_excel') }}" class="download-btn">Download Excel</a>
 </body>
 </html>
 
