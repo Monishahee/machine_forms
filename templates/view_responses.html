@@ -1,57 +1,54 @@
-<!-- templates/view_responses.html -->
 <!DOCTYPE html>
 <html>
 <head>
-    <title>View Responses</title>
+    <title>All Responses</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
-        table {
-            border-collapse: collapse;
-            width: 100%;
-        }
-        th, td {
-            padding: 8px;
-            border: 1px solid #888;
-            text-align: left;
-        }
-        th {
-            background-color: #eee;
-        }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; }
+        th { background-color: #f2f2f2; }
+        img { max-width: 100px; max-height: 100px; }
     </style>
 </head>
 <body>
-    <h2>All Vendor Responses</h2>
+    <h2>Submitted Responses</h2>
+    <a href="{{ url_for('download_excel') }}">📥 Download Excel</a><br><br>
 
-    <a href="{{ url_for('download_excel') }}" download>
-        <button>Download Excel</button>
-    </a>
-
-    <br><br>
-
-    {% if tables %}
-        <table>
-            <thead>
+    <table>
+        <thead>
+            <tr>
+                {% for title in titles %}
+                    <th>{{ title }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in tables[0] %}
                 <tr>
-                    {% for title in titles %}
-                        <th>{{ title }}</th>
+                    {% for cell, col in zip(row, titles) %}
+                        <td>
+                            {% if col in ['company_image', 'machine_images'] %}
+                                {% if cell %}
+                                    {% for img in cell.split(', ') %}
+                                        <a href="{{ url_for('uploaded_file', filename=img) }}" target="_blank">
+                                            <img src="{{ url_for('uploaded_file', filename=img) }}" alt="image">
+                                        </a><br>
+                                    {% endfor %}
+                                {% else %}
+                                    No image
+                                {% endif %}
+                            {% else %}
+                                {{ cell }}
+                            {% endif %}
+                        </td>
                     {% endfor %}
                 </tr>
-            </thead>
-            <tbody>
-                {% for row in tables[0] %}
-                    <tr>
-                        {% for cell in row %}
-                            <td>{{ cell }}</td>
-                        {% endfor %}
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>No responses found.</p>
-    {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
 </body>
 </html>
+
 
 
 
