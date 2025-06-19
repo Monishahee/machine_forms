@@ -138,11 +138,10 @@ def view_responses():
     df = df.applymap(format_image)
 
     return render_template(
-        'view_responses.html',
-        tables=[df.to_html(classes='table', escape=False, index=False)],
-        titles=df.columns.values
-    )
-
+    'view_responses.html',
+    tables=[df.to_html(classes='table', index=False, escape=False)],
+    titles=df.columns.values
+)
 
 
 @app.route('/download_excel')
