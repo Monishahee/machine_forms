@@ -84,25 +84,30 @@ def specs_form():
 
 @app.route('/submit_specs', methods=['POST'])
 def submit_specs():
-    spec_fields = [
-        'make', 'model_year', 'type', 'axis_config', 'x_travel', 'y_travel', 'z_travel',
-        'a_travel', 'b_travel', 'c_travel', 'max_part_size', 'max_part_height',
-        'spindle_taper', 'spindle_power', 'spindle_torque', 'main_spindle_rpm',
-        'aux_spindle_rpm', 'max_table_load', 'coolant_pressure', 'pallet_type',
-        'tolerance_standard', 'accuracy_xyz', 'accuracy_abc', 'accuracy_table',
-        'angle_head', 'controller', 'cad_software', 'cam_software',
-        'wire_diameter', 'taper_degree', 'max_cutting_thickness', 'surface_finish',
-        'electrode_diameter', 'spindle_stroke', 'table_size', 'sink_size'
-    ]
-    for field in spec_fields:
-        session_data[field] = request.form.get(field, '')
+    try:
+        spec_fields = [
+            'make', 'model_year', 'type', 'axis_config', 'x_travel', 'y_travel', 'z_travel',
+            'a_travel', 'b_travel', 'c_travel', 'max_part_size', 'max_part_height',
+            'spindle_taper', 'spindle_power', 'spindle_torque', 'main_spindle_rpm',
+            'aux_spindle_rpm', 'max_table_load', 'coolant_pressure', 'pallet_type',
+            'tolerance_standard', 'accuracy_xyz', 'accuracy_abc', 'accuracy_table',
+            'angle_head', 'controller', 'cad_software', 'cam_software',
+            'wire_diameter', 'taper_degree', 'max_cutting_thickness', 'surface_finish',
+            'electrode_diameter', 'spindle_stroke', 'table_size', 'sink_size'
+        ]
 
-    if request.form.get('action') == 'add':
+        for field in spec_fields:
+            session_data[field] = request.form.get(field, '')
+
+        action = request.form.get('action')
         save_to_excel(session_data.copy())
-        return redirect('/machine_entry')
-    else:
-        save_to_excel(session_data.copy())
-        return redirect('/final_submit')
+
+        if action == 'add':
+            return redirect('/machine_entry')
+        else:
+            return redirect('/final_submit')
+    except Exception as e:
+        return f"<h3>Error occurred: {str(e)}</h3>", 500
 
 @app.route('/final_submit')
 def final_submit():
