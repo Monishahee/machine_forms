@@ -3,6 +3,9 @@ pandas
 tinydb
 openpyxl
 requests
+flask_sqlalchemy
+
+
 
 
 
