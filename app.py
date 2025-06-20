@@ -84,6 +84,9 @@ def export_excel():
     df.to_excel(excel_path, index=False)
     return send_from_directory(DATA_FOLDER, 'responses.xlsx', as_attachment=True)
 
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory('uploads', filename)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=10000)
