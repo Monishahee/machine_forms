@@ -152,9 +152,35 @@ def final_submit():
 def view_responses():
     try:
         records = db.all()
-        return render_template("view_responses.html", records=records)
+
+        display_order = [
+            'timestamp', 'company_name', 'vendor_name', 'address', 'email', 'phone', 'gstin',
+            'website', 'payment_terms', 'associated_from', 'validity', 'approved_by',
+            'identification', 'feedback', 'remarks', 'enquired_part', 'visited_date',
+            'contact_name', 'contact_no', 'contact_email', 'nda_signed', 'detailed_evaluation',
+            'machine', 'size', 'hour_rate', 'machine_images',
+            'make', 'model_year', 'type', 'axis_config', 'x_travel', 'y_travel', 'z_travel',
+            'a_travel', 'b_travel', 'c_travel', 'max_part_size', 'max_part_height',
+            'spindle_taper', 'spindle_power', 'spindle_torque', 'main_spindle_rpm',
+            'aux_spindle_rpm', 'max_table_load', 'coolant_pressure', 'pallet_type',
+            'tolerance_standard', 'accuracy_xyz', 'accuracy_abc', 'accuracy_table',
+            'angle_head', 'controller', 'cad_software', 'cam_software',
+            'wire_diameter', 'taper_degree', 'max_cutting_thickness', 'surface_finish',
+            'electrode_diameter', 'spindle_stroke', 'table_size', 'sink_size',
+            'company_image'
+        ]
+
+        # Reorder for viewing
+        df = pd.DataFrame(records)
+        for field in display_order:
+            if field not in df.columns:
+                df[field] = ''
+        df = df[display_order]
+
+        return render_template("view_responses.html", records=df.to_dict(orient='records'), headers=display_order)
     except Exception as e:
         return f"Error loading responses: {str(e)}"
+
 
 @app.route('/download_excel')
 def download_excel():
