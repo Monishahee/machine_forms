@@ -166,13 +166,27 @@ def view_responses():
         return render_template("view_responses.html", records=records)
     except Exception as e:
         return f"Error loading responses: {str(e)}"
-
+        
 @app.route('/download_excel')
 def download_excel():
-    try:
-        return send_from_directory(app.config['DATA_FOLDER'], 'responses.xlsx', as_attachment=True)
-    except Exception as e:
-        return f"Download Error: {str(e)}"
+    import pandas as pd
+    import os
+    from flask import send_from_directory
+    from datetime import datetime
+
+    entries = []  # or pull from DB
+    # Example fallback if you are not using SQLAlchemy:
+    if os.path.exists("data/responses.json"):
+        import json
+        with open("data/responses.json") as f:
+            entries = json.load(f)
+
+    df = pd.DataFrame(entries)
+    os.makedirs("data", exist_ok=True)
+    out_path = "data/responses.xlsx"
+    df.to_excel(out_path, index=False, engine="openpyxl")
+    return send_from_directory("data", "responses.xlsx", as_attachment=True)
+
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
