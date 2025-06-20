@@ -1,54 +1,84 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>View Responses</title>
+    <title>View Submitted Responses</title>
     <style>
         body {
-            font-family: Arial;
-            margin: 20px;
+            font-family: Arial, sans-serif;
         }
         h2 {
-            color: #333;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-        th, td {
-            border: 1px solid #999;
-            padding: 8px;
-            text-align: left;
-            vertical-align: top;
-        }
-        img {
-            max-width: 100px;
-            height: auto;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        img:hover {
-            transform: scale(2);
-            z-index: 99;
-            position: relative;
+            margin-bottom: 20px;
         }
         .download-btn {
-            margin: 20px 0;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            overflow-x: auto;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            max-width: 300px;
+            word-wrap: break-word;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        img {
+            max-width: 150px;
+            max-height: 100px;
         }
     </style>
 </head>
 <body>
     <h2>Submitted Responses</h2>
-    <div class="download-btn">
-        <a href="{{ url_for('download_excel') }}" download>
-            <button>Download as Excel</button>
-        </a>
-    </div>
-    {% for table in tables %}
-        {{ table | safe }}
-    {% endfor %}
+
+    <a href="{{ url_for('download_excel') }}" class="download-btn">📥 Download Excel</a>
+
+    {% if records %}
+    <table>
+        <thead>
+            <tr>
+                {% for key in records[0].keys() %}
+                    <th>{{ key }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in records %}
+                <tr>
+                    {% for key, value in row.items() %}
+                        <td>
+                            {% if key.endswith('_image') or key.endswith('_images') %}
+                                {% for img in value.split(',') %}
+                                    {% if img.strip() %}
+                                        <img src="{{ url_for('uploaded_file', filename=img.strip()) }}" alt="Image"><br>
+                                    {% endif %}
+                                {% endfor %}
+                            {% else %}
+                                {{ value }}
+                            {% endif %}
+                        </td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p>No responses yet.</p>
+    {% endif %}
 </body>
 </html>
+
 
 
 
