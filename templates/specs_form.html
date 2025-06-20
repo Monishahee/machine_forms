@@ -5,9 +5,11 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h2>Specifications for {{ machine }} ({{ size }})</h2>
-
+    <h2>Specifications for {{ entry.machine }} ({{ entry.size }})</h2>
     <form method="POST" action="{{ url_for('specs_form', entry_id=entry.id) }}">
+
+
+
 
 
 
