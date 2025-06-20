@@ -1,7 +1,8 @@
 flask
 pandas
 openpyxl
-tinydb
+requests
+
 
 
 
