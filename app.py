@@ -1,26 +1,29 @@
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory
+from flask import Flask, render_template, request, redirect, send_from_directory
 import os
 import pandas as pd
 from werkzeug.utils import secure_filename
 import firebase_admin
 from firebase_admin import credentials, db
+from datetime import datetime
 
-# Flask app setup
 app = Flask(__name__)
+
+# Local folders
 UPLOAD_FOLDER = 'uploads'
 DATA_FOLDER = 'data'
 EXCEL_FILE = os.path.join(DATA_FOLDER, 'responses.xlsx')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(DATA_FOLDER, exist_ok=True)
 
-# Initialize Firebase Admin
-cred = credentials.Certificate("serviceAccountKey.json")  # Place this JSON file in your root folder
+# Firebase setup
+cred = credentials.Certificate('credentials/firebase_key.json')  # Place your key here
 firebase_admin.initialize_app(cred, {
-    'databaseURL': 'https://machine-data-form-default-rtdb.firebaseio.com/'  # replace with your Firebase DB URL
+    'databaseURL': 'https:https://machine-data-form-default-rtdb.firebaseio.com/'
 })
 
 session_data = {}
 
+# Save to Excel
 def save_to_excel(data):
     df = pd.DataFrame([data])
     if not os.path.exists(EXCEL_FILE):
@@ -30,10 +33,6 @@ def save_to_excel(data):
         final_df = pd.concat([existing, df], ignore_index=True)
         final_df.to_excel(EXCEL_FILE, index=False, engine='openpyxl')
 
-def save_to_firebase(data):
-    ref = db.reference('responses')
-    ref.push(data)
-
 @app.route('/')
 def index():
     return render_template('vendor_form.html')
@@ -41,27 +40,13 @@ def index():
 @app.route('/submit_vendor', methods=['POST'])
 def submit_vendor():
     try:
-        session_data['company_name'] = request.form.get('company_name', '')
-        session_data['vendor_name'] = request.form.get('vendor_name', '')
-        session_data['address'] = request.form.get('address', '')
-        session_data['email'] = request.form.get('email', '')
-        session_data['phone'] = request.form.get('phone', '')
-        session_data['gstin'] = request.form.get('gstin', '')
-        session_data['website'] = request.form.get('website', '')
-        session_data['payment_terms'] = request.form.get('payment_terms', '')
-        session_data['associated_from'] = request.form.get('associated_from', '')
-        session_data['validity'] = request.form.get('validity', '')
-        session_data['approved_by'] = request.form.get('approved_by', '')
-        session_data['identification'] = request.form.get('identification', '')
-        session_data['feedback'] = request.form.get('feedback', '')
-        session_data['remarks'] = request.form.get('remarks', '')
-        session_data['enquired_part'] = request.form.get('enquired_part', '')
-        session_data['visited_date'] = request.form.get('visited_date', '')
-        session_data['contact_name'] = request.form.get('contact_name', '')
-        session_data['contact_no'] = request.form.get('contact_no', '')
-        session_data['contact_email'] = request.form.get('contact_email', '')
-        session_data['nda_signed'] = request.form.get('nda_signed', '')
-        session_data['detailed_evaluation'] = request.form.get('detailed_evaluation', '')
+        for field in [
+            'company_name', 'vendor_name', 'address', 'email', 'phone', 'gstin', 'website',
+            'payment_terms', 'associated_from', 'validity', 'approved_by', 'identification',
+            'feedback', 'remarks', 'enquired_part', 'visited_date',
+            'contact_name', 'contact_no', 'contact_email', 'nda_signed', 'detailed_evaluation'
+        ]:
+            session_data[field] = request.form.get(field, '')
 
         image = request.files.get('board_image')
         if image and image.filename:
@@ -90,6 +75,7 @@ def machine_entry():
                 img.save(os.path.join(UPLOAD_FOLDER, filename))
                 image_filenames.append(filename)
         session_data['machine_images'] = ', '.join(image_filenames)
+
         return redirect('/specs_form')
     return render_template('machine_entry.html')
 
@@ -113,18 +99,19 @@ def submit_specs():
         for field in fields:
             session_data[field] = request.form.get(field, '')
 
-        action = request.form.get('action')
+        # Store in Firebase
+        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+        ref = db.reference(f'machine_submissions/{timestamp}')
+        ref.set(session_data)
 
-        # Save to Excel and Firebase
+        # Also store locally in Excel
         save_to_excel(session_data.copy())
-        save_to_firebase(session_data.copy())
 
-        if action == 'add':
+        if request.form.get('action') == 'add':
             return redirect('/machine_entry')
-        elif action == 'submit':
-            return redirect('/final_submit')
         else:
-            return "Unknown action."
+            return redirect('/final_submit')
+
     except Exception as e:
         return f"Error in /submit_specs: {str(e)}"
 
@@ -153,7 +140,7 @@ def uploaded_file(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=10000)
+    app.run(debug=True, host='0.0.0.0', port=10000)
 
 
 
