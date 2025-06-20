@@ -140,7 +140,7 @@ def view_responses():
         # Render images if any
         for rec in records:
             if 'company_image' in rec and rec['company_image']:
-                rec['company_image'] = f"<img src='/uploads/{rec['company_image']}' width='100'/>"
+                rec['company_image'] = f"<a href='/uploads/{rec['company_image']}' target='_blank'><img src='/uploads/{rec['company_image']}' width='100'/></a>"
             if 'machine_images' in rec and rec['machine_images']:
                 rec['machine_images'] = '<br>'.join(
                     [f"<img src='/uploads/{img.strip()}' width='100'/>" for img in rec['machine_images'].split(',')]
