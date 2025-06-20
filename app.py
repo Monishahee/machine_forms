@@ -32,7 +32,9 @@ class Entry(db.Model):
     machine_images = db.Column(db.Text)
     specs = db.Column(db.Text)
 
-db.create_all()
+with app.app_context():
+    db.create_all()
+
 
 # Google Apps Script endpoint (replace with your actual URL)
 GAS_URL = "https://script.google.com/macros/s/AKfycbyyFHjwHkZP1Ljkxh8fM4_uPQviaCpttByQnj2jt4voWKRD21Q_IGEwdGMTSn3J0pRd/exec"
