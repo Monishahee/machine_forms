@@ -170,7 +170,6 @@ def view_responses():
             'company_image'
         ]
 
-        # Reorder for viewing
         df = pd.DataFrame(records)
         for field in display_order:
             if field not in df.columns:
@@ -180,7 +179,6 @@ def view_responses():
         return render_template("view_responses.html", records=df.to_dict(orient='records'), headers=display_order)
     except Exception as e:
         return f"Error loading responses: {str(e)}"
-
 
 @app.route('/download_excel')
 def download_excel():
