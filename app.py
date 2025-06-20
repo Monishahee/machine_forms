@@ -18,7 +18,7 @@ os.makedirs(DATA_FOLDER, exist_ok=True)
 # Firebase setup
 cred = credentials.Certificate('credentials/firebase_key.json')  # Place your key here
 firebase_admin.initialize_app(cred, {
-    'databaseURL': 'https:https://machine-data-form-default-rtdb.firebaseio.com/'
+    'databaseURL': 'https://machine-data-form-default-rtdb.firebaseio.com/'
 })
 
 session_data = {}
