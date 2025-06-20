@@ -34,7 +34,34 @@ def upload_to_google_script(data, image_path):
 
 def save_to_local(data):
     db.insert(data)
-    df = pd.DataFrame(db.all())
+
+    ordered_fields = [
+        'timestamp', 'company_name', 'vendor_name', 'address', 'email', 'phone', 'gstin',
+        'website', 'payment_terms', 'associated_from', 'validity', 'approved_by',
+        'identification', 'feedback', 'remarks', 'enquired_part', 'visited_date',
+        'contact_name', 'contact_no', 'contact_email', 'nda_signed', 'detailed_evaluation',
+        'machine', 'size', 'hour_rate', 'machine_images',
+        'make', 'model_year', 'type', 'axis_config', 'x_travel', 'y_travel', 'z_travel',
+        'a_travel', 'b_travel', 'c_travel', 'max_part_size', 'max_part_height',
+        'spindle_taper', 'spindle_power', 'spindle_torque', 'main_spindle_rpm',
+        'aux_spindle_rpm', 'max_table_load', 'coolant_pressure', 'pallet_type',
+        'tolerance_standard', 'accuracy_xyz', 'accuracy_abc', 'accuracy_table',
+        'angle_head', 'controller', 'cad_software', 'cam_software',
+        'wire_diameter', 'taper_degree', 'max_cutting_thickness', 'surface_finish',
+        'electrode_diameter', 'spindle_stroke', 'table_size', 'sink_size',
+        'company_image'
+    ]
+
+    all_data = db.all()
+    df = pd.DataFrame(all_data)
+
+    # Ensure all ordered fields exist
+    for field in ordered_fields:
+        if field not in df.columns:
+            df[field] = ''
+
+    # Reorder and save
+    df = df[ordered_fields]
     df.to_excel(EXCEL_FILE, index=False)
 
 @app.route('/')
