@@ -1,79 +1,27 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>All Responses</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f9f9f9;
-            padding: 40px;
-        }
-
-        h2 {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .table-container {
-            overflow-x: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px #ccc;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th {
-            background-color: #0077cc;
-            color: white;
-            padding: 10px;
-            position: sticky;
-            top: 0;
-        }
-
-        td {
-            padding: 10px;
-            border: 1px solid #ccc;
-            vertical-align: top;
-        }
-
-        img {
-            max-width: 100px;
-            max-height: 100px;
-            border-radius: 5px;
-        }
-
-        .download-btn {
-            margin-top: 20px;
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #0077cc;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            text-decoration: none;
-        }
-
-        .download-btn:hover {
-            background-color: #005fa3;
-        }
-    </style>
-</head>
+<head><title>All Responses</title></head>
 <body>
-
-<h2>All Submitted Responses</h2>
-
-<div class="table-container">
-    {{ tables[0]|safe }}
-</div>
-
-<a class="download-btn" href="{{ url_for('download_excel') }}">Download Excel</a>
-
+    <h2>All Submitted Responses</h2>
+    <a href="/download_json">Download JSON</a>
+    <table border="1">
+        <thead>
+            <tr>
+                {% for key in records[0].keys() %}
+                <th>{{ key }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in records %}
+            <tr>
+                {% for value in record.values() %}
+                <td>{{ value }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </body>
 </html>
 
