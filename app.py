@@ -8,6 +8,8 @@ from tinydb import TinyDB
 from datetime import datetime
 
 app = Flask(__name__)
+app.secret_key = 'your-very-secret-key' 
+
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['DATA_FOLDER'] = 'data'
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
