@@ -1,36 +1,22 @@
 <!DOCTYPE html>
 <html>
-<head><title>All Responses</title></head>
+<head>
+    <title>All Responses</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+</head>
 <body>
-    <h2>All Submitted Responses</h2>
-    <a href="/download_json">Download JSON</a>
-    <a href="/export_excel" download>📥 Download Excel</a>
-    <table border="1">
-        <thead>
-            <tr>
-                {% for key in records[0].keys() %}
-                <th>{{ key }}</th>
-                {% endfor %}
-            </tr>
-        </thead>
-        <tbody>
-            {% for record in records %}
-            <tr>
-                {% for value in record.values() %}
-                <td>{{ value }}</td>
-                {% endfor %}
-            </tr>
-            <tr>
-                {% endfor %}
-                {% if 'company_image' in row and row['company_image'] %}
-                <img src="{{ url_for('uploaded_file', filename=row['company_image']) }}" width="150">
-                {% endif %}
-            </tr>
-
-        </tbody>
-    </table>
+    <div class="container mt-4">
+        <h2>All Submitted Responses</h2>
+        <a href="{{ url_for('download_json') }}" class="btn btn-primary btn-sm">📄 Download JSON</a>
+        <a href="{{ url_for('download_excel') }}" class="btn btn-success btn-sm ml-2">📥 Download Excel</a>
+        <hr>
+        {% for table in tables %}
+            {{ table | safe }}
+        {% endfor %}
+    </div>
 </body>
 </html>
+
 
 
 
