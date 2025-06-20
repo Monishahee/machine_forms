@@ -3,6 +3,8 @@ import os
 import pandas as pd
 from werkzeug.utils import secure_filename
 from tinydb import TinyDB
+db = TinyDB('data/responses.json')  # Static file that survives restarts
+
 
 app = Flask(__name__)
 
@@ -76,7 +78,7 @@ def specs_form():
 @app.route('/submit_specs', methods=['POST'])
 def submit_specs():
     try:
-        spec_fields = [
+        fields = [
             'make', 'model_year', 'type', 'axis_config', 'x_travel', 'y_travel', 'z_travel',
             'a_travel', 'b_travel', 'c_travel', 'max_part_size', 'max_part_height',
             'spindle_taper', 'spindle_power', 'spindle_torque', 'main_spindle_rpm',
@@ -86,17 +88,23 @@ def submit_specs():
             'wire_diameter', 'taper_degree', 'max_cutting_thickness', 'surface_finish',
             'electrode_diameter', 'spindle_stroke', 'table_size', 'sink_size'
         ]
-
-        for field in spec_fields:
+        for field in fields:
             session_data[field] = request.form.get(field, '')
 
-        # Save to JSON (TinyDB) and Excel
-        db.insert(session_data.copy())
-        save_to_excel()
+        action = request.form.get('action')
 
-        if request.form.get('action') == 'add':
+        # Save to TinyDB (static JSON)
+        db.insert(session_data.copy())
+
+        # Optional: still save to Excel for downloads
+        save_to_excel(session_data.copy())
+
+        if action == 'add':
             return redirect('/machine_entry')
-        return redirect('/final_submit')
+        elif action == 'submit':
+            return redirect('/final_submit')
+        else:
+            return "Unknown action."
     except Exception as e:
         return f"Error in /submit_specs: {str(e)}"
 
@@ -107,19 +115,13 @@ def final_submit():
 @app.route('/view_responses')
 def view_responses():
     try:
-        db = TinyDB(os.path.join(DATA_FOLDER, 'responses.json'))
-        data = db.all()
-
-        if not data:
+        records = db.all()
+        if not records:
             return "<h3>No responses yet.</h3>"
-
-        df = pd.DataFrame(data)
-
-        return render_template('view_responses.html',
-                               tables=[df.to_html(classes='table table-bordered', index=False)],
-                               titles=df.columns.values)
+        return render_template('view_responses.html', records=records)
     except Exception as e:
         return f"<h3>Error loading responses: {str(e)}</h3>"
+
 
 
 @app.route('/download_excel')
@@ -128,7 +130,8 @@ def download_excel():
 
 @app.route('/download_json')
 def download_json():
-    return send_from_directory(DATA_FOLDER, 'responses.json', as_attachment=True)
+    return send_from_directory('data', 'responses.json', as_attachment=True)
+
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
