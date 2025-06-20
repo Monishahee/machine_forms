@@ -3,43 +3,53 @@
 <head>
     <title>View Responses</title>
     <style>
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 8px; border: 1px solid #ccc; vertical-align: top; }
-        img { max-width: 120px; max-height: 120px; }
+        body {
+            font-family: Arial;
+            margin: 20px;
+        }
+        h2 {
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #999;
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+        img {
+            max-width: 100px;
+            height: auto;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        img:hover {
+            transform: scale(2);
+            z-index: 99;
+            position: relative;
+        }
+        .download-btn {
+            margin: 20px 0;
+        }
     </style>
 </head>
 <body>
     <h2>Submitted Responses</h2>
-    <a href="{{ url_for('download_excel') }}">Download Excel</a> |
-    <a href="{{ url_for('download_json') }}">Download JSON</a>
-    <br><br>
-
-    <table>
-        <thead>
-            <tr>
-                {% for key in records[0].keys() %}
-                    <th>{{ key }}</th>
-                {% endfor %}
-            </tr>
-        </thead>
-        <tbody>
-            {% for row in records %}
-                <tr>
-                    {% for key, val in row.items() %}
-                        <td>
-                            {% if key.endswith('image') and val %}
-                                <img src="{{ url_for('uploaded_file', filename=val) }}">
-                            {% else %}
-                                {{ val }}
-                            {% endif %}
-                        </td>
-                    {% endfor %}
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="download-btn">
+        <a href="{{ url_for('download_excel') }}" download>
+            <button>Download as Excel</button>
+        </a>
+    </div>
+    {% for table in tables %}
+        {{ table | safe }}
+    {% endfor %}
 </body>
 </html>
+
 
 
 
