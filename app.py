@@ -111,16 +111,15 @@ def machine_entry():
 @app.route('/specs_form', methods=['GET', 'POST'])
 def specs_form():
     if request.method == 'POST':
-        # Get specs data
         specs = request.form.to_dict()
-        # Do something with specs (e.g., store in DB or send to Google Apps Script)
+        # You can process/store specs here
         flash("✅ Specifications submitted successfully.")
         return redirect(url_for('view_responses'))
 
-    # For GET request, retrieve machine and size from session (or any source)
     machine = session.get('machine', 'Unknown Machine')
     size = session.get('size', 'Unknown Size')
-    return render_template('specs_form.html', machine=machine, size=size))
+    return render_template('specs_form.html', machine=machine, size=size)
+
 
 @app.route('/submit_specs', methods=['POST'])
 def submit_specs():
