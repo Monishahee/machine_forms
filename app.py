@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 import os
 import pandas as pd
 import base64
@@ -108,9 +108,19 @@ def machine_entry():
     except Exception as e:
         return f"Error in /machine_entry: {str(e)}"
 
-@app.route('/specs_form')
+@app.route('/specs_form', methods=['GET', 'POST'])
 def specs_form():
-    return render_template('specs_form.html', machine=session_data.get('machine'), size=session_data.get('size'))
+    if request.method == 'POST':
+        # Get specs data
+        specs = request.form.to_dict()
+        # Do something with specs (e.g., store in DB or send to Google Apps Script)
+        flash("✅ Specifications submitted successfully.")
+        return redirect(url_for('view_responses'))
+
+    # For GET request, retrieve machine and size from session (or any source)
+    machine = session.get('machine', 'Unknown Machine')
+    size = session.get('size', 'Unknown Size')
+    return render_template('specs_form.html', machine=machine, size=size))
 
 @app.route('/submit_specs', methods=['POST'])
 def submit_specs():
