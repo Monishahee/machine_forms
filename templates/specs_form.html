@@ -5,13 +5,9 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h2>Specifications for {{ entry.machine }} ({{ entry.size }})</h2>
-    <form method="POST" action="{{ url_for('specs_form', entry_id=entry.id) }}">
+    <h2>Specifications for {{ machine }} ({{ size }})</h2>
 
-
-
-
-
+    <form method="POST" action="{{ url_for('specs_form') }}">
 
         <input type="hidden" name="machine" value="{{ machine }}">
         <input type="hidden" name="size" value="{{ size }}">
@@ -71,22 +67,19 @@
             <label>Max Table Load:</label>
             <input type="text" name="max_table_load"><br>
 
-            <label>Thru Coolant Pressure:</label>
+            <label>Coolant Pressure:</label>
             <input type="text" name="coolant_pressure"><br>
 
-            <label>Pallet Type (Thread/T Slot):</label>
+            <label>Pallet Type:</label>
             <input type="text" name="pallet_type"><br>
 
-            <label>Positional Tolerance Standard:</label>
-            <input type="text" name="tolerance_standard"><br>
-
-            <label>Positional Accuracy (X/Y/Z):</label>
+            <label>Accuracy XYZ:</label>
             <input type="text" name="accuracy_xyz"><br>
 
-            <label>Positional Accuracy (A/B/C):</label>
+            <label>Accuracy ABC:</label>
             <input type="text" name="accuracy_abc"><br>
 
-            <label>Positional Accuracy (Table):</label>
+            <label>Accuracy Table:</label>
             <input type="text" name="accuracy_table"><br>
 
             <label>Angle Head:</label>
@@ -135,12 +128,11 @@
         <div class="section">
            <button type="submit" name="action" value="add">Add Another Machine</button>
            <button type="submit" name="action" value="submit">Submit All</button>
-
-
         </div>
     </form>
 </body>
 </html>
+
 
 
 
