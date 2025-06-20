@@ -20,7 +20,13 @@
                 <td>{{ value }}</td>
                 {% endfor %}
             </tr>
-            {% endfor %}
+            <tr>
+                {% endfor %}
+                {% if 'company_image' in row and row['company_image'] %}
+                <img src="{{ url_for('uploaded_file', filename=row['company_image']) }}" width="150">
+                {% endif %}
+            </tr>
+
         </tbody>
     </table>
 </body>
