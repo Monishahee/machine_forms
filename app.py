@@ -194,6 +194,10 @@ def download_excel():
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+print("Registered Routes:")
+for rule in app.url_map.iter_rules():
+    print(rule.endpoint, rule)
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=10000)
