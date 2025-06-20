@@ -75,6 +75,15 @@ def view_responses():
 @app.route('/download_json')
 def download_json():
     return send_from_directory(DATA_FOLDER, 'responses.json', as_attachment=True)
+    
+@app.route('/export_excel')
+def export_excel():
+    db = TinyDB('data/responses.json')
+    df = pd.DataFrame(db.all())
+    excel_path = os.path.join(DATA_FOLDER, 'responses.xlsx')
+    df.to_excel(excel_path, index=False)
+    return send_from_directory(DATA_FOLDER, 'responses.xlsx', as_attachment=True)
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=10000)
