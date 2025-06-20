@@ -24,6 +24,7 @@ def save_to_excel():
     df = pd.DataFrame(all_data)
     df.to_excel(EXCEL_FILE, index=False, engine='openpyxl')
 
+
 # === Routes ===
 @app.route('/')
 def index():
