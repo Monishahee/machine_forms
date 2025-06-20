@@ -29,6 +29,7 @@
             max-width: 300px;
             word-wrap: break-word;
             text-align: left;
+            vertical-align: top;
         }
         th {
             background-color: #f2f2f2;
@@ -48,24 +49,24 @@
     <table>
         <thead>
             <tr>
-                {% for key in records[0].keys() %}
-                    <th>{{ key }}</th>
+                {% for h in headers %}
+                    <th>{{ h }}</th>
                 {% endfor %}
             </tr>
         </thead>
         <tbody>
             {% for row in records %}
                 <tr>
-                    {% for key, value in row.items() %}
+                    {% for h in headers %}
                         <td>
-                            {% if key.endswith('_image') or key.endswith('_images') %}
-                                {% for img in value.split(',') %}
+                            {% if h.endswith('_image') or h.endswith('_images') %}
+                                {% for img in row[h].split(',') %}
                                     {% if img.strip() %}
                                         <img src="{{ url_for('uploaded_file', filename=img.strip()) }}" alt="Image"><br>
                                     {% endif %}
                                 {% endfor %}
                             {% else %}
-                                {{ value }}
+                                {{ row[h] }}
                             {% endif %}
                         </td>
                     {% endfor %}
