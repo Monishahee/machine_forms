@@ -1,47 +1,36 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>All Responses</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <title>View Responses</title>
     <style>
-        img.thumb {
-            height: 100px;
-            border: 1px solid #ccc;
-            margin: 5px;
-        }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 8px; border: 1px solid #ccc; vertical-align: top; }
+        img { max-width: 120px; max-height: 120px; }
     </style>
 </head>
 <body>
-<div class="container mt-4">
-    <h2>All Submitted Responses</h2>
-    <a href="{{ url_for('download_json') }}" class="btn btn-primary btn-sm">📄 Download JSON</a>
-    <a href="{{ url_for('download_excel') }}" class="btn btn-success btn-sm ml-2">📥 Download Excel</a>
-    <hr>
-    <table class="table table-bordered table-striped">
+    <h2>Submitted Responses</h2>
+    <a href="{{ url_for('download_excel') }}">Download Excel</a> |
+    <a href="{{ url_for('download_json') }}">Download JSON</a>
+    <br><br>
+
+    <table>
         <thead>
-            {% if records %}
-                <tr>
-                    {% for key in records[0].keys() %}
-                        <th>{{ key }}</th>
-                    {% endfor %}
-                </tr>
-            {% endif %}
+            <tr>
+                {% for key in records[0].keys() %}
+                    <th>{{ key }}</th>
+                {% endfor %}
+            </tr>
         </thead>
         <tbody>
             {% for row in records %}
                 <tr>
-                    {% for key, value in row.items() %}
+                    {% for key, val in row.items() %}
                         <td>
-                            {% if 'image' in key and value %}
-                                {% if ',' in value %}
-                                    {% for img in value.split(',') %}
-                                        <img class="thumb" src="{{ url_for('uploaded_file', filename=img.strip()) }}" alt="image">
-                                    {% endfor %}
-                                {% else %}
-                                    <img class="thumb" src="{{ url_for('uploaded_file', filename=value.strip()) }}" alt="image">
-                                {% endif %}
+                            {% if key.endswith('image') and val %}
+                                <img src="{{ url_for('uploaded_file', filename=val) }}">
                             {% else %}
-                                {{ value }}
+                                {{ val }}
                             {% endif %}
                         </td>
                     {% endfor %}
@@ -49,10 +38,8 @@
             {% endfor %}
         </tbody>
     </table>
-</div>
 </body>
 </html>
-
 
 
 
