@@ -7,7 +7,8 @@
 <body>
     <h2>Specifications for {{ machine }} ({{ size }})</h2>
 
-    <form method="POST" action="{{ url_for('specs_form') }}">
+    <form method="POST" action="{{ url_for('submit_specs') }}">
+
 
         <input type="hidden" name="machine" value="{{ machine }}">
         <input type="hidden" name="size" value="{{ size }}">
