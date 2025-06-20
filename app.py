@@ -19,7 +19,7 @@ db = TinyDB(TINYDB_FILE)
 session_data = {}
 
 # Replace this with your deployed Google Apps Script Web App URL
-GOOGLE_SCRIPT_WEB_APP_URL = ""
+GOOGLE_SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwqMZacuJruJUpX3Kj6okBxdDHuafp5M0OmqhBjhItMGoGhMz1l-hOR7uixKQWfU64y/exec"
 
 def upload_to_google_script(data, image_path):
     try:
