@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory
+from flask import Flask, render_template, request, redirect, send_from_directory, url_for
 import os
 import pandas as pd
 from werkzeug.utils import secure_filename
@@ -12,22 +12,18 @@ DATA_FOLDER = 'data'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(DATA_FOLDER, exist_ok=True)
 
-# TinyDB setup
-JSON_DB_FILE = os.path.join(DATA_FOLDER, 'responses.json')
-db = TinyDB(JSON_DB_FILE)
-
-# Static Excel path
+# DB & Excel file
+DB_PATH = os.path.join(DATA_FOLDER, 'responses.json')
 EXCEL_FILE = os.path.join(DATA_FOLDER, 'responses.xlsx')
+db = TinyDB(DB_PATH)
 
-# Temporary session data store
+# Temp storage for multi-step form
 session_data = {}
 
-# Save current db data to Excel
 def save_to_excel():
-    records = db.all()
-    if records:
-        df = pd.DataFrame(records)
-        df.to_excel(EXCEL_FILE, index=False)
+    """Regenerates the Excel from TinyDB data"""
+    df = pd.DataFrame(db.all())
+    df.to_excel(EXCEL_FILE, index=False)
 
 @app.route('/')
 def index():
@@ -36,23 +32,39 @@ def index():
 @app.route('/submit_vendor', methods=['POST'])
 def submit_vendor():
     try:
-        fields = [
-            'company_name', 'vendor_name', 'address', 'email', 'phone', 'gstin',
-            'website', 'payment_terms', 'associated_from', 'validity',
-            'approved_by', 'identification', 'feedback', 'remarks', 'enquired_part',
-            'visited_date', 'contact_name', 'contact_no', 'contact_email',
-            'nda_signed', 'detailed_evaluation'
-        ]
-        for field in fields:
-            session_data[field] = request.form.get(field, '')
+        session_data.clear()  # clear for each new submission
+        session_data['vendor'] = {
+            'company_name': request.form.get('company_name', ''),
+            'vendor_name': request.form.get('vendor_name', ''),
+            'address': request.form.get('address', ''),
+            'email': request.form.get('email', ''),
+            'phone': request.form.get('phone', ''),
+            'gstin': request.form.get('gstin', ''),
+            'website': request.form.get('website', ''),
+            'payment_terms': request.form.get('payment_terms', ''),
+            'associated_from': request.form.get('associated_from', ''),
+            'validity': request.form.get('validity', ''),
+            'approved_by': request.form.get('approved_by', ''),
+            'identification': request.form.get('identification', ''),
+            'feedback': request.form.get('feedback', ''),
+            'remarks': request.form.get('remarks', ''),
+            'enquired_part': request.form.get('enquired_part', ''),
+            'visited_date': request.form.get('visited_date', ''),
+            'contact_name': request.form.get('contact_name', ''),
+            'contact_no': request.form.get('contact_no', ''),
+            'contact_email': request.form.get('contact_email', ''),
+            'nda_signed': request.form.get('nda_signed', ''),
+            'detailed_evaluation': request.form.get('detailed_evaluation', '')
+        }
 
         image = request.files.get('board_image')
         if image and image.filename:
             filename = secure_filename(image.filename)
             image.save(os.path.join(UPLOAD_FOLDER, filename))
-            session_data['company_image'] = filename
+            session_data['vendor']['company_image'] = filename
         else:
-            session_data['company_image'] = ''
+            session_data['vendor']['company_image'] = ''
+
         return redirect('/machine_entry')
     except Exception as e:
         return f"Error in /submit_vendor: {str(e)}"
@@ -60,9 +72,11 @@ def submit_vendor():
 @app.route('/machine_entry', methods=['GET', 'POST'])
 def machine_entry():
     if request.method == 'POST':
-        session_data['machine'] = request.form.get('machine', '')
-        session_data['size'] = request.form.get('size', '')
-        session_data['hour_rate'] = request.form.get('hour_rate', '')
+        session_data['machine'] = {
+            'machine': request.form.get('machine', ''),
+            'size': request.form.get('size', ''),
+            'hour_rate': request.form.get('hour_rate', '')
+        }
 
         images = request.files.getlist('machine_images')
         image_filenames = []
@@ -71,13 +85,16 @@ def machine_entry():
                 filename = secure_filename(img.filename)
                 img.save(os.path.join(UPLOAD_FOLDER, filename))
                 image_filenames.append(filename)
-        session_data['machine_images'] = ', '.join(image_filenames)
+        session_data['machine']['machine_images'] = ', '.join(image_filenames)
+
         return redirect('/specs_form')
     return render_template('machine_entry.html')
 
 @app.route('/specs_form')
 def specs_form():
-    return render_template('specs_form.html', machine=session_data.get('machine'), size=session_data.get('size'))
+    return render_template('specs_form.html',
+                           machine=session_data.get('machine', {}).get('machine', ''),
+                           size=session_data.get('machine', {}).get('size', ''))
 
 @app.route('/submit_specs', methods=['POST'])
 def submit_specs():
@@ -92,10 +109,11 @@ def submit_specs():
             'wire_diameter', 'taper_degree', 'max_cutting_thickness', 'surface_finish',
             'electrode_diameter', 'spindle_stroke', 'table_size', 'sink_size'
         ]
-        for field in fields:
-            session_data[field] = request.form.get(field, '')
+        session_data['specs'] = {field: request.form.get(field, '') for field in fields}
 
-        db.insert(session_data.copy())
+        # Merge all subdicts into one
+        final_record = {**session_data['vendor'], **session_data['machine'], **session_data['specs']}
+        db.insert(final_record)
         save_to_excel()
 
         action = request.form.get('action')
@@ -118,17 +136,26 @@ def view_responses():
         records = db.all()
         if not records:
             return "<h3>No responses yet.</h3>"
-        return render_template('view_responses.html', records=records)
+
+        # Render images if any
+        for rec in records:
+            if 'company_image' in rec and rec['company_image']:
+                rec['company_image'] = f"<img src='/uploads/{rec['company_image']}' width='100'/>"
+            if 'machine_images' in rec and rec['machine_images']:
+                rec['machine_images'] = '<br>'.join(
+                    [f"<img src='/uploads/{img.strip()}' width='100'/>" for img in rec['machine_images'].split(',')]
+                )
+
+        df = pd.DataFrame(records)
+        return render_template('view_responses.html',
+                               tables=[df.to_html(classes='table table-striped', escape=False, index=False)],
+                               titles=df.columns.values)
     except Exception as e:
         return f"<h3>Error loading responses: {str(e)}</h3>"
 
 @app.route('/download_excel')
 def download_excel():
     return send_from_directory(DATA_FOLDER, 'responses.xlsx', as_attachment=True)
-
-@app.route('/download_json')
-def download_json():
-    return send_from_directory(DATA_FOLDER, 'responses.json', as_attachment=True)
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
