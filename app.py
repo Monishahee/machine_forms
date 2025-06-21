@@ -45,7 +45,7 @@ def save_to_local(data):
         'a_travel', 'b_travel', 'c_travel', 'max_part_size', 'max_part_height',
         'spindle_taper', 'spindle_power', 'spindle_torque', 'main_spindle_rpm',
         'aux_spindle_rpm', 'max_table_load', 'coolant_pressure', 'pallet_type',
-        'tolerance_standard', 'accuracy_xyz', 'accuracy_abc', 'accuracy_table',
+         'accuracy_xyz', 'accuracy_abc', 'accuracy_table',
         'angle_head', 'controller', 'cad_software', 'cam_software',
         'wire_diameter', 'taper_degree', 'max_cutting_thickness', 'surface_finish',
         'electrode_diameter', 'spindle_stroke', 'table_size', 'sink_size',
