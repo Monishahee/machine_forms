@@ -16,7 +16,7 @@ EXCEL_FILE = os.path.join(app.config['DATA_FOLDER'], 'responses.xlsx')
 TINYDB_FILE = os.path.join(app.config['DATA_FOLDER'], 'responses.json')
 db = TinyDB(TINYDB_FILE)
 
-GOOGLE_SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw5jje7yv90IbNDX3rBuUR7IKhak4u29jWqqohpDuyMY3N8v0Y6DkbBjO4H--ddQ2cZ/exec"
+GOOGLE_SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxoQhgx5fOhDXPujQevY30fm5NJho4hUXMKrTUGJ2332dWjjfULxCb9251iHxNYh_Wr/exec"
 
 def upload_to_google_script(data, image_path):
     try:
